@@ -1,17 +1,15 @@
 package main
 
 import (
-      "net/http",
+      "net/http"
       "fmt"
 )
 
-func handler(out http.ResponseWriter, req *http.Request) 
-{
-  fmt.PrintLn("Req:", req.url)
+func handler(out http.ResponseWriter, req *http.Request) {
+  fmt.Println("Req:", req.URL)
 }
 
-func main() 
-{
-    http.HandleFunc("/", handler())
+func main() {
+    http.HandleFunc("/", handler)
     http.ListenAndServe(":8080", nil)
 }
