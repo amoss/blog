@@ -7,6 +7,15 @@ import (
       "strings"
 )
 
+type DocFrag struct {
+}
+
+type DocBlock struct {
+}
+
+type Document struct {
+}
+
 type LineClass int
 const (
       Blank LineClass = iota
