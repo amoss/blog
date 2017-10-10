@@ -7,13 +7,55 @@ import (
       "strings"
 )
 
+type FragStyle int
+const (
+  FsNone FragStyle = iota
+  FsEmpty
+  FsStrong
+  FsDefhead
+  FsDefitem
+  FsLink
+  FsLiteral
+  FsTopicTitle
+)
+
 type DocFrag struct {
+    style FragStyle
+    cnt   string
 }
 
+type BlockStyle int
+const (
+  BsNone BlockStyle = iota
+  BsBulleted
+  BsNumbered
+  BsQuote
+  BsBeginTopic
+  BsEndTopic
+  BsBibItem
+)
+
 type DocBlock struct {
+    style BlockStyle
+    frags []DocFrag
+}
+
+type DocSection struct {
+    blocks []DocBlock
 }
 
 type Document struct {
+    blocks []DocBlock
+}
+
+func (doc *Document) newBlock(style BlockStyle) {
+  doc.blocks = append(doc.blocks, make([]DocBlock,1)...)
+}
+
+func (doc *Document) renderHtml() {
+  for i:=0; i<len(doc.blocks); i++ {
+    fmt.Println(i,doc.blocks[i].style,len(doc.blocks[i].frags))
+  }
 }
 
 type LineClass int
@@ -60,6 +102,7 @@ const (
 )
 
 func parseRst(src string) {
+  var doc Document
   lines := strings.Split(src,"\n")
   state := Default
   cur := ""
@@ -116,6 +159,7 @@ func parseRst(src string) {
     }
     fmt.Println(i, classifyLine(lines[i]), lines[i])
   }
+  _ = doc
 }
 
 func handler(out http.ResponseWriter, req *http.Request) {
