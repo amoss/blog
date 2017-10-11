@@ -5,6 +5,7 @@ import (
       "fmt"
       "io/ioutil"
       "strings"
+      "regexp"
 )
 
 type FragStyle int
@@ -34,11 +35,13 @@ const (
   BsEndTopic
   BsBibItem
   BsSubsection
+  BsLiteral
 )
 
 type DocBlock struct {
-    style BlockStyle
-    frags []DocFrag
+    style    BlockStyle
+    litStyle string
+    frags    []DocFrag
 }
 
 type DocSection struct {
@@ -48,6 +51,17 @@ type DocSection struct {
 
 type Document struct {
     sections []DocSection
+}
+
+func (doc *Document) lastBlock() *DocBlock {
+    if len(doc.sections)==0 {
+        doc.newBlock(BsNone)
+    }
+    curSection := &doc.sections[ len(doc.sections)-1 ]
+    if len(curSection.blocks)==0 {
+        doc.newBlock(BsNone)
+    }
+    return &curSection.blocks[ len(curSection.blocks)-1 ]
 }
 
 func (doc *Document) newBlock(style BlockStyle) {
@@ -75,9 +89,14 @@ func (doc *Document) renderHtml() {
     for s, curSection := range doc.sections {
         fmt.Println("Section",s,curSection.title)
         for b, curBlock := range(curSection.blocks) {
-            fmt.Println(b,curBlock.style,len(curBlock.frags))
-            for f, frag := range(curBlock.frags) {
-                fmt.Println("F:", f, frag.style, frag.cnt)
+            switch curBlock.style {
+                case BsLiteral:
+                    fmt.Println(b,"Literal",curBlock.litStyle)
+                default:
+                    fmt.Println(b,curBlock.style,len(curBlock.frags))
+                    for f, frag := range(curBlock.frags) {
+                        fmt.Println("F:", f, frag.style, frag.cnt)
+                    }
             }
         }
     }
@@ -126,6 +145,19 @@ const (
         InDirective
 )
 
+func parseDirective(doc *Document, name string, extra string) {
+    switch name {
+        case "shell":
+            doc.newBlock(BsLiteral)
+            doc.lastBlock().litStyle = "shell"
+        case "code":
+            doc.newBlock(BsLiteral)
+            doc.lastBlock().litStyle = "code"
+        case "topic":
+        default:
+    }
+}
+
 func parseRst(src string) {
   var doc Document
   lines := strings.Split(src,"\n")
@@ -146,6 +178,10 @@ func parseRst(src string) {
           case Directive:
             state = InDirective
             cur = lines[i][3:]
+            re := regexp.MustCompile(".. *([A-Za-z]+):: *(.*)")
+            m := re.FindStringSubmatch(lines[i])
+            parseDirective(&doc, m[1], m[2])
+            fmt.Println("Regex:", m[0], m[1], m[2])
         }
       case InDirective:
         switch classifyLine(lines[i]) {

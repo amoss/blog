@@ -27,3 +27,7 @@ fkdjfkdj kjdfkj dkkdjfk
   Continue with this line
 
 Normal paragraph again `linky title <http://do.it>`_. Some stuff.
+
+.. topic:: Topic Title
+
+  Some content
