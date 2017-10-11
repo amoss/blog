@@ -33,6 +33,7 @@ const (
   BsBeginTopic
   BsEndTopic
   BsBibItem
+  BsSubsection
 )
 
 type DocBlock struct {
@@ -41,21 +42,45 @@ type DocBlock struct {
 }
 
 type DocSection struct {
+    title    string
     blocks []DocBlock
 }
 
 type Document struct {
-    blocks []DocBlock
+    sections []DocSection
 }
 
 func (doc *Document) newBlock(style BlockStyle) {
-  doc.blocks = append(doc.blocks, make([]DocBlock,1)...)
+  if len(doc.sections)==0 {
+    doc.sections = make([]DocSection,1)
+  }
+  curSection := &doc.sections[ len(doc.sections)-1 ]
+  curSection.blocks = append(curSection.blocks, DocBlock{style:style})
+}
+
+func (doc *Document) newFragment(style FragStyle, content string) {
+    if len(doc.sections)==0 {
+        doc.newBlock(BsNone)
+    }
+    curSection := &doc.sections[ len(doc.sections)-1 ]
+    if len(curSection.blocks)==0 {
+        doc.newBlock(BsNone)
+    }
+    curBlock := &curSection.blocks[ len(curSection.blocks)-1 ]
+    curBlock.frags = append( curBlock.frags, DocFrag{style:style, cnt:content} )
+    fmt.Println(curBlock,len(curBlock.frags))
 }
 
 func (doc *Document) renderHtml() {
-  for i:=0; i<len(doc.blocks); i++ {
-    fmt.Println(i,doc.blocks[i].style,len(doc.blocks[i].frags))
-  }
+    for s, curSection := range doc.sections {
+        fmt.Println("Section",s,curSection.title)
+        for b, curBlock := range(curSection.blocks) {
+            fmt.Println(b,curBlock.style,len(curBlock.frags))
+            for f, frag := range(curBlock.frags) {
+                fmt.Println("F:", f, frag.style, frag.cnt)
+            }
+        }
+    }
 }
 
 type LineClass int
@@ -117,6 +142,7 @@ func parseRst(src string) {
           case Other:
             state = InPara
             cur   = lines[i]
+            doc.newFragment(FsNone, cur)
           case Directive:
             state = InDirective
             cur = lines[i][3:]
@@ -143,15 +169,19 @@ func parseRst(src string) {
         switch classifyLine(lines[i]) {
           case Other:
             cur += "\n" + lines[i]
+            doc.newFragment( FsNone, lines[i] )
           case Blank:
             fmt.Println("Found a para", cur)
             state = Default
             cur   = ""
           case SectionHeading:
             fmt.Println("Found a section heading", cur)
+            ns := DocSection{title:cur}
+            doc.sections = append( doc.sections, ns)
             cur = ""
             state = Default
           case SubsectionHeading:
+            doc.newBlock(BsSubsection)
             fmt.Println("Found a subsection heading", cur)
             cur = ""
             state = Default
@@ -159,7 +189,7 @@ func parseRst(src string) {
     }
     fmt.Println(i, classifyLine(lines[i]), lines[i])
   }
-  _ = doc
+  doc.renderHtml()
 }
 
 func handler(out http.ResponseWriter, req *http.Request) {

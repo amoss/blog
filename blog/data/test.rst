@@ -7,7 +7,10 @@ A title block
 :Tag:    some arbitrary tag
 
 Section heading
----------------------
+==================
+
+A subsection
+------------------
 
 Blah blah blha aihfilsd flsdfklsdfkjsdklf jskldj
 fsdfksd 
