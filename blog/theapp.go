@@ -25,6 +25,11 @@ type DocFrag struct {
     cnt   string
 }
 
+func (doc *Document) lastFragment() *DocFrag {
+  block := doc.lastBlock()
+  return &block.frags[ len(block.frags)-1 ]
+}
+
 type BlockStyle int
 const (
   BsNone BlockStyle = iota
@@ -50,6 +55,7 @@ type DocSection struct {
 }
 
 type Document struct {
+    title    string
     sections []DocSection
 }
 
@@ -85,13 +91,41 @@ func (doc *Document) newFragment(style FragStyle, content string) {
     fmt.Println(curBlock,len(curBlock.frags))
 }
 
-func (doc *Document) renderHtml() {
+func (doc *Document) renderHtml(out http.ResponseWriter) {
+    out.Write( []byte("<html><head><title>") )
+    out.Write( []byte(doc.title) )
+    out.Write( []byte("</title><script src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML\" type=\"text/javascript\"></script><link href=\"styles.css\" type=\"text/css\" rel=\"stylesheet\"></link></head><body>"))
+
     for s, curSection := range doc.sections {
+        // Document can start with implied (empty) section
+        if len(curSection.title)>0 {
+          out.Write( []byte("<h1>") )
+          out.Write( []byte(curSection.title) )
+          out.Write( []byte("</h1>") )
+        }
         fmt.Println("Section",s,curSection.title)
         for b, curBlock := range(curSection.blocks) {
             switch curBlock.style {
+                case BsNone:
+                    out.Write( []byte("\n<p>") )
+                    for _, frag := range(curBlock.frags) {
+                        out.Write( []byte(frag.cnt) )
+                    }
+                    out.Write( []byte("</p>\n") )
+                case BsSubsection:
+                    out.Write( []byte("<h2>") )
+                    for _, frag := range(curBlock.frags) {
+                        out.Write( []byte(frag.cnt) )
+                    }
+                    out.Write( []byte("</h2>") )
                 case BsLiteral:
-                    fmt.Println(b,"Literal",curBlock.litStyle)
+                    out.Write( []byte("<div class=\"") )
+                    out.Write( []byte(curBlock.litStyle) )
+                    out.Write( []byte("\">") )
+                    for _, frag := range(curBlock.frags) {
+                        out.Write( []byte(frag.cnt) )
+                    }
+                    out.Write( []byte("</div>") )
                 default:
                     fmt.Println(b,curBlock.style,len(curBlock.frags))
                     for f, frag := range(curBlock.frags) {
@@ -100,6 +134,7 @@ func (doc *Document) renderHtml() {
             }
         }
     }
+    out.Write( []byte("</body></html>") )
 }
 
 type LineClass int
@@ -158,11 +193,10 @@ func parseDirective(doc *Document, name string, extra string) {
     }
 }
 
-func parseRst(src string) {
+func parseRst(src string) Document {
   var doc Document
   lines := strings.Split(src,"\n")
   state := Default
-  cur := ""
   for i:= 0; i<len(lines); i++ {
     switch state {
       case Default:
@@ -172,60 +206,101 @@ func parseRst(src string) {
           case Blank:
             // Ignore
           case Other:
+            doc.newBlock(BsNone)
             state = InPara
-            cur   = lines[i]
-            doc.newFragment(FsNone, cur)
+            doc.newFragment(FsNone, lines[i])
           case Directive:
             state = InDirective
-            cur = lines[i][3:]
             re := regexp.MustCompile(".. *([A-Za-z]+):: *(.*)")
             m := re.FindStringSubmatch(lines[i])
             parseDirective(&doc, m[1], m[2])
             fmt.Println("Regex:", m[0], m[1], m[2])
+          default:
+            fmt.Println("Dropping in ",state, lines[i])
         }
       case InDirective:
         switch classifyLine(lines[i]) {
           case Indented:
-            cur += "\n" + lines[i]    // Do a tab-expansion and TrimLeft
-          case Blank:
+            if len(doc.lastBlock().frags) == 0 {
+              doc.newFragment(FsNone, lines[i])
+            } else {
+              doc.lastFragment().cnt = doc.lastFragment().cnt + "\n" + lines[i]
+            }
+          case Other:
+            doc.newBlock(BsNone)
+            doc.newFragment(FsNone,lines[i])
+            state = InPara
+          case Blank:   // Drop
+          /*case Blank:
             fmt.Println("Found a directive", cur)
             state = Default
-            cur   = ""
+            cur   = ""*/
+          default:
+            fmt.Println("Dropping in ",state, lines[i])
         }
 
       case TitleBlock:
         switch classifyLine(lines[i]) {
           case Other:
-            cur += "\n" + lines[i]
-          case SectionHeading:
-            fmt.Println("Found a title block", cur)
+            fmt.Println("Title block, dropping ", lines[i])
             state = Default
+          /*case SectionHeading:
+            fmt.Println("Found a title block", cur)
+            state = Default*/
+          default:
+            fmt.Println("Dropping in ",state, lines[i])
         }
       case InPara:
         switch classifyLine(lines[i]) {
           case Other:
-            cur += "\n" + lines[i]
-            doc.newFragment( FsNone, lines[i] )
+            doc.lastFragment().cnt = doc.lastFragment().cnt + lines[i]
           case Blank:
-            fmt.Println("Found a para", cur)
             state = Default
-            cur   = ""
           case SectionHeading:
-            fmt.Println("Found a section heading", cur)
-            ns := DocSection{title:cur}
+            oldBlock := doc.popBlock()
+            ns := DocSection{title:oldBlock.flatten()}
             doc.sections = append( doc.sections, ns)
-            cur = ""
             state = Default
           case SubsectionHeading:
+            fmt.Println("Subby", lines[i])
+            oldBlock := doc.popBlock()
+            fmt.Println("Subby", oldBlock.flatten())
             doc.newBlock(BsSubsection)
-            fmt.Println("Found a subsection heading", cur)
-            cur = ""
+            doc.newFragment(FsNone, oldBlock.flatten())
             state = Default
+          default:
+            fmt.Println("Dropping in ",state, lines[i])
         }
     }
     fmt.Println(i, classifyLine(lines[i]), lines[i])
   }
-  doc.renderHtml()
+  return doc
+}
+
+func (doc *Document) popBlock() DocBlock {
+  s := len(doc.sections)
+  if s<1 || len(doc.sections[s-1].blocks)<1 {
+      panic("Bad shit...")
+  }
+  lastSect := &doc.sections[s-1]
+  b := len(lastSect.blocks)
+  var bl DocBlock
+  fmt.Println("Old len", b)
+  lastSect.blocks,bl = lastSect.blocks[:b-1], lastSect.blocks[b-1]
+  fmt.Println("New len", len(lastSect.blocks))
+  if len(lastSect.blocks)==0 {
+    doc.sections = doc.sections[:s-1]
+  }
+  return bl
+}
+
+func (b *DocBlock) flatten() string {
+  var res []byte
+  for _,f := range(b.frags) {
+    if f.style!=FsNone { panic("Cannot flatten styled text!") }
+    res = append(res, []byte(f.cnt)... )
+  }
+  return string(res)
 }
 
 func handler(out http.ResponseWriter, req *http.Request) {
@@ -233,7 +308,8 @@ func handler(out http.ResponseWriter, req *http.Request) {
   filename := "data" + req.URL.Path + ".rst"
   cnt, err := ioutil.ReadFile(filename)
   if err==nil {
-    parseRst( string(cnt) )
+    doc := parseRst( string(cnt) )
+    doc.renderHtml(out)
   } else {
     fmt.Println(err)
   }
