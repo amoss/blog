@@ -54,8 +54,15 @@ type DocSection struct {
     blocks []DocBlock
 }
 
+type DocKind int
+const (
+    DocPage DocKind = iota
+    DocSlides
+)
+
 type Document struct {
-    title    string
+    title,author,date,courseCode,courseName    string
+    kind  DocKind
     sections []DocSection
 }
 
@@ -88,14 +95,29 @@ func (doc *Document) newFragment(style FragStyle, content string) {
     }
     curBlock := &curSection.blocks[ len(curSection.blocks)-1 ]
     curBlock.frags = append( curBlock.frags, DocFrag{style:style, cnt:content} )
-    fmt.Println(curBlock,len(curBlock.frags))
+}
+
+// Transition function
+func forceEnv(out http.ResponseWriter, current string, next string) string {
+    if current==next { return next }
+    if current!="none" {
+        out.Write( []byte("</") )
+        out.Write( []byte(current) )
+        out.Write( []byte(">") )
+    }
+    if next!="none" {
+        out.Write( []byte("<") )
+        out.Write( []byte(next) )
+        out.Write( []byte(">") )
+    }
+    return next
 }
 
 func (doc *Document) renderHtml(out http.ResponseWriter) {
     out.Write( []byte("<html><head><title>") )
     out.Write( []byte(doc.title) )
     out.Write( []byte("</title><script src=\"http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML\" type=\"text/javascript\"></script><link href=\"styles.css\" type=\"text/css\" rel=\"stylesheet\"></link></head><body>"))
-
+    opEnv := "none"
     for s, curSection := range doc.sections {
         // Document can start with implied (empty) section
         if len(curSection.title)>0 {
@@ -107,18 +129,23 @@ func (doc *Document) renderHtml(out http.ResponseWriter) {
         for b, curBlock := range(curSection.blocks) {
             switch curBlock.style {
                 case BsNone:
+                    opEnv = forceEnv(out,opEnv,"none")
                     out.Write( []byte("\n<p>") )
                     for _, frag := range(curBlock.frags) {
                         out.Write( []byte(frag.cnt) )
+                        out.Write( []byte(" ") )
                     }
                     out.Write( []byte("</p>\n") )
                 case BsSubsection:
+                    opEnv = forceEnv(out,opEnv,"none")
                     out.Write( []byte("<h2>") )
                     for _, frag := range(curBlock.frags) {
                         out.Write( []byte(frag.cnt) )
+                        out.Write( []byte(" ") )
                     }
                     out.Write( []byte("</h2>") )
                 case BsLiteral:
+                    opEnv = forceEnv(out,opEnv,"none")
                     out.Write( []byte("<div class=\"") )
                     out.Write( []byte(curBlock.litStyle) )
                     out.Write( []byte("\">") )
@@ -127,7 +154,12 @@ func (doc *Document) renderHtml(out http.ResponseWriter) {
                     }
                     out.Write( []byte("</div>") )
                 case BsBulleted:
-                    // DO STUFF HERE NOT BE A DICK!!!
+                    opEnv = forceEnv(out,opEnv,"ul")
+                    out.Write( []byte("<li>") )
+                    for _, frag := range(curBlock.frags) {
+                        out.Write( []byte(frag.cnt) )
+                        out.Write( []byte(" ") )
+                    }
                 default:
                     fmt.Println(b,curBlock.style,len(curBlock.frags))
                     for f, frag := range(curBlock.frags) {
@@ -148,6 +180,7 @@ const (
       Directive
       Bulleted
       Numbered
+      Attribute
       Other
 )
 
@@ -176,6 +209,12 @@ func classifyLine(line string) LineClass {
   if line[0:2]=="* " {
     return Bulleted
   }
+  slices := strings.Split(line,":")
+  if len(slices)==3  &&  
+     len(slices[0])==0  &&  
+     !strings.Contains(slices[1]," ") {
+    return Attribute
+  }
   return Other
 }
 
@@ -185,6 +224,7 @@ const (
         TitleBlock
         InPara
         InDirective
+        InBullet
 )
 
 func parseDirective(doc *Document, name string, extra string) {
@@ -224,8 +264,39 @@ func parseRst(src string) Document {
           case Bulleted:
             doc.newBlock(BsBulleted)
             doc.newFragment(FsNone, lines[i][2:])
+            state = InBullet
+          case Attribute:
+            if len(doc.sections)==0 {
+                slices := strings.Split(lines[i],":")
+                switch slices[1] {
+                  case "Author":     doc.author     = slices[2]
+                  case "Date":       doc.date       = slices[2]
+                  case "CourseCode": doc.courseCode = slices[2]
+                  case "CourseName": doc.courseCode = slices[2]
+                  case "Style":
+                      switch strings.TrimLeft(slices[2]," ") {
+                          case "Slides": doc.kind = DocSlides
+                          case "Page":   doc.kind = DocPage
+                          default: panic("Unknown document style:"+slices[2])
+                      }
+                  default:
+                    panic("Unknown document attribute:"+slices[1])
+                }
+            }
           default:
             fmt.Println("Dropping in ",state, lines[i])
+        }
+      case InBullet:
+        switch classifyLine(lines[i]) {
+            case Blank:
+                state = Default
+            case Indented:
+                doc.newFragment(FsNone, lines[i][2:])
+            case Bulleted:
+                doc.newBlock(BsBulleted)
+                doc.newFragment(FsNone, lines[i][2:])
+            default:
+                fmt.Println("Dropping in InBullet", lines[i])
         }
       case InDirective:
         switch classifyLine(lines[i]) {
@@ -251,11 +322,9 @@ func parseRst(src string) Document {
       case TitleBlock:
         switch classifyLine(lines[i]) {
           case Other:
-            fmt.Println("Title block, dropping ", lines[i])
+            doc.title = doc.title + lines[i]
+          case SectionHeading:
             state = Default
-          /*case SectionHeading:
-            fmt.Println("Found a title block", cur)
-            state = Default*/
           default:
             fmt.Println("Dropping in ",state, lines[i])
         }
@@ -271,17 +340,17 @@ func parseRst(src string) Document {
             doc.sections = append( doc.sections, ns)
             state = Default
           case SubsectionHeading:
-            fmt.Println("Subby", lines[i])
             oldBlock := doc.popBlock()
-            fmt.Println("Subby", oldBlock.flatten())
             doc.newBlock(BsSubsection)
             doc.newFragment(FsNone, oldBlock.flatten())
             state = Default
           default:
             fmt.Println("Dropping in ",state, lines[i])
         }
+      default:
+        fmt.Println("Stuck in ",state)
     }
-    fmt.Println(i, classifyLine(lines[i]), lines[i])
+    //fmt.Println(i, classifyLine(lines[i]), lines[i])
   }
   return doc
 }
@@ -294,9 +363,7 @@ func (doc *Document) popBlock() DocBlock {
   lastSect := &doc.sections[s-1]
   b := len(lastSect.blocks)
   var bl DocBlock
-  fmt.Println("Old len", b)
   lastSect.blocks,bl = lastSect.blocks[:b-1], lastSect.blocks[b-1]
-  fmt.Println("New len", len(lastSect.blocks))
   if len(lastSect.blocks)==0 {
     doc.sections = doc.sections[:s-1]
   }

@@ -4,7 +4,6 @@ A title block
 
 :Author: the author
 :Date:   a thing
-:Tag:    some arbitrary tag
 
 Section heading
 ==================
