@@ -126,6 +126,8 @@ func (doc *Document) renderHtml(out http.ResponseWriter) {
                         out.Write( []byte(frag.cnt) )
                     }
                     out.Write( []byte("</div>") )
+                case BsBulleted:
+                    // DO STUFF HERE NOT BE A DICK!!!
                 default:
                     fmt.Println(b,curBlock.style,len(curBlock.frags))
                     for f, frag := range(curBlock.frags) {
@@ -144,6 +146,8 @@ const (
       SectionHeading
       SubsectionHeading
       Directive
+      Bulleted
+      Numbered
       Other
 )
 
@@ -168,6 +172,9 @@ func classifyLine(line string) LineClass {
   }
   if line[0:2]==".." {
     return Directive
+  }
+  if line[0:2]=="* " {
+    return Bulleted
   }
   return Other
 }
@@ -214,7 +221,9 @@ func parseRst(src string) Document {
             re := regexp.MustCompile(".. *([A-Za-z]+):: *(.*)")
             m := re.FindStringSubmatch(lines[i])
             parseDirective(&doc, m[1], m[2])
-            fmt.Println("Regex:", m[0], m[1], m[2])
+          case Bulleted:
+            doc.newBlock(BsBulleted)
+            doc.newFragment(FsNone, lines[i][2:])
           default:
             fmt.Println("Dropping in ",state, lines[i])
         }
@@ -305,13 +314,19 @@ func (b *DocBlock) flatten() string {
 
 func handler(out http.ResponseWriter, req *http.Request) {
   fmt.Println("Req:", req.URL)
-  filename := "data" + req.URL.Path + ".rst"
-  cnt, err := ioutil.ReadFile(filename)
-  if err==nil {
-    doc := parseRst( string(cnt) )
-    doc.renderHtml(out)
-  } else {
-    fmt.Println(err)
+  switch req.URL.Path {
+      case "/styles.css":
+        cnt,_ := ioutil.ReadFile("data/styles.css")
+        out.Write(cnt)
+      default:
+        filename := "data" + req.URL.Path + ".rst"
+        cnt, err := ioutil.ReadFile(filename)
+        if err==nil {
+          doc := parseRst( string(cnt) )
+          doc.renderHtml(out)
+        } else {
+          fmt.Println(err)
+        }
   }
 }
 
