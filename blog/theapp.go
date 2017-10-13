@@ -240,6 +240,11 @@ func parseDirective(doc *Document, name string, extra string) {
     }
 }
 
+func (b *DocBlock) processInlines() {
+  // TODO: Initial block should be single fragment
+  //      Find inline markers and split into multi-frags...
+}
+
 func parseRst(src string) Document {
   var doc Document
   lines := strings.Split(src,"\n")
