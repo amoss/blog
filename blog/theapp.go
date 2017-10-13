@@ -44,9 +44,9 @@ const (
 )
 
 type DocBlock struct {
-    style    BlockStyle
-    litStyle string
-    frags    []DocFrag
+    style           BlockStyle
+    litStyle,title  string
+    frags           []DocFrag
 }
 
 type DocSection struct {
@@ -225,18 +225,31 @@ const (
         InPara
         InDirective
         InBullet
+        InTopic
+        InTopic2
 )
 
+var state ParseState
 func parseDirective(doc *Document, name string, extra string) {
     switch name {
         case "shell":
             doc.newBlock(BsLiteral)
             doc.lastBlock().litStyle = "shell"
+            state = InDirective
         case "code":
             doc.newBlock(BsLiteral)
             doc.lastBlock().litStyle = "code"
+            state = InDirective
         case "topic":
+            doc.newBlock(BsBeginTopic)
+            doc.lastBlock().title = extra
+            state = InTopic
+        case "image":
+            fmt.Println("Do shit with image", extra)
+        case "epigraph":
+            fmt.Println("Dropping some quote shit", extra)
         default:
+            panic("Unknown directive "+name)
     }
 }
 
@@ -248,7 +261,7 @@ func (b *DocBlock) processInlines() {
 func parseRst(src string) Document {
   var doc Document
   lines := strings.Split(src,"\n")
-  state := Default
+  state = Default
   for i:= 0; i<len(lines); i++ {
     switch state {
       case Default:
@@ -262,7 +275,6 @@ func parseRst(src string) Document {
             state = InPara
             doc.newFragment(FsNone, lines[i])
           case Directive:
-            state = InDirective
             re := regexp.MustCompile(".. *([A-Za-z]+):: *(.*)")
             m := re.FindStringSubmatch(lines[i])
             parseDirective(&doc, m[1], m[2])
@@ -291,6 +303,30 @@ func parseRst(src string) Document {
           default:
             fmt.Println("Dropping in ",state, lines[i])
         }
+      case InTopic:
+        switch classifyLine(lines[i]) {
+          case Blank:
+            state = InTopic2
+          case Indented:
+            doc.newFragment(FsNone, lines[i])
+          case Other:
+            panic("Need a blank after topic block")
+          default:
+        }
+      case InTopic2:
+        switch classifyLine(lines[i]) {
+          case Blank:
+          case Indented:
+            doc.newBlock(BsNone)
+            doc.newFragment(FsNone, lines[i])
+            state = InTopic
+          case Other:
+            doc.newBlock(BsEndTopic)
+            doc.newBlock(BsNone)
+            doc.newFragment(FsNone, lines[i])
+            state = Default
+          default:
+        }
       case InBullet:
         switch classifyLine(lines[i]) {
             case Blank:
@@ -315,6 +351,10 @@ func parseRst(src string) Document {
             doc.newBlock(BsNone)
             doc.newFragment(FsNone,lines[i])
             state = InPara
+          case Bulleted:
+            doc.newBlock(BsBulleted)
+            doc.newFragment(FsNone, lines[i][2:])
+            state = InBullet
           case Blank:   // Drop
           /*case Blank:
             fmt.Println("Found a directive", cur)
