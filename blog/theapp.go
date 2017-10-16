@@ -43,6 +43,21 @@ const (
   BsLiteral
 )
 
+func toString(bs BlockStyle) string {
+    switch bs {
+        case BsNone: return "BsNone"
+        case BsBulleted: return "BsBulleted"
+        case BsNumbered: return "BsNumbered"
+        case BsQuote: return "BsQuote"
+        case BsBeginTopic: return "BsBeginTopic"
+        case BsEndTopic: return "BsEndTopic"
+        case BsBibItem: return "BsBibItem"
+        case BsSubsection: return "BsSubsection"
+        case BsLiteral: return "BsLiteral"
+        default: panic("Unknown BlockStyle")
+    }
+}
+
 type DocBlock struct {
     style           BlockStyle
     litStyle,title  string
@@ -161,7 +176,7 @@ func (doc *Document) renderHtml(out http.ResponseWriter) {
                         out.Write( []byte(" ") )
                     }
                 default:
-                    fmt.Println(b,curBlock.style,len(curBlock.frags))
+                    fmt.Println("renderHtml/unknown block",b,curBlock.style,len(curBlock.frags))
                     for f, frag := range(curBlock.frags) {
                         fmt.Println("F:", f, frag.style, frag.cnt)
                     }
@@ -254,9 +269,24 @@ func parseDirective(doc *Document, name string, extra string) {
 }
 
 func (b *DocBlock) processInlines() {
+  if len(b.frags)==0 { return }     // Topic Begin/End markers
+  if len(b.frags)!=1 { panic("Blocks should star with one fragment") }
   // TODO: Initial block should be single fragment
   //      Find inline markers and split into multi-frags...
+  fmt.Println("Initial block size: ",len(b.frags))
+  inline := regexp.MustCompile("`[^`]+`_")
+  splits := inline.Split(b.frags[0].cnt,-1)
+  fmt.Println(splits)
 }
+
+func (doc *Document) processInlines() {
+    for _,s := range(doc.sections) {
+        for _,b := range(s.blocks) {
+          b.processInlines()
+        }
+    }
+}
+
 
 func parseRst(src string) Document {
   var doc Document
@@ -312,6 +342,7 @@ func parseRst(src string) Document {
           case Other:
             panic("Need a blank after topic block")
           default:
+            panic("Unexpected line type in InTopic")
         }
       case InTopic2:
         switch classifyLine(lines[i]) {
@@ -325,7 +356,13 @@ func parseRst(src string) Document {
             doc.newBlock(BsNone)
             doc.newFragment(FsNone, lines[i])
             state = Default
+          case Bulleted:
+            doc.newBlock(BsEndTopic)
+            doc.newBlock(BsBulleted)
+            doc.newFragment(FsNone, lines[i][2:])
+            state = InBullet
           default:
+            panic("Unexpected line type in InTopic2")
         }
       case InBullet:
         switch classifyLine(lines[i]) {
@@ -336,6 +373,10 @@ func parseRst(src string) Document {
             case Bulleted:
                 doc.newBlock(BsBulleted)
                 doc.newFragment(FsNone, lines[i][2:])
+            case Directive:
+                re := regexp.MustCompile(".. *([A-Za-z]+):: *(.*)")
+                m := re.FindStringSubmatch(lines[i])
+                parseDirective(&doc, m[1], m[2])
             default:
                 fmt.Println("Dropping in InBullet", lines[i])
         }
@@ -424,6 +465,18 @@ func (b *DocBlock) flatten() string {
   return string(res)
 }
 
+func (doc *Document) dump() {
+    for s,section := range(doc.sections) {
+        fmt.Println("Section",s,section.title)
+        for b,block := range(section.blocks) {
+            fmt.Println("Block",b,len(block.frags),toString(block.style))
+            for f,frag := range(block.frags) {
+                fmt.Println(" Frag",f,frag.style,frag.cnt)
+            }
+        }
+    }
+}
+
 func handler(out http.ResponseWriter, req *http.Request) {
   fmt.Println("Req:", req.URL)
   switch req.URL.Path {
@@ -435,6 +488,8 @@ func handler(out http.ResponseWriter, req *http.Request) {
         cnt, err := ioutil.ReadFile(filename)
         if err==nil {
           doc := parseRst( string(cnt) )
+          doc.dump()
+          doc.processInlines()
           doc.renderHtml(out)
         } else {
           fmt.Println(err)
