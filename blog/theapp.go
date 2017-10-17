@@ -186,10 +186,9 @@ func (doc *Document) renderHtml(out http.ResponseWriter) {
     out.Write( []byte("</body></html>") )
 }
 
-type LineClass int
+type LineClassE int
 const (
-      Blank LineClass = iota
-      Indented
+      Blank LineClassE = iota
       SectionHeading
       SubsectionHeading
       Directive
@@ -198,42 +197,46 @@ const (
       Attribute
       Other
 )
+type LineClass struct {
+    indent int
+    kind   LineClassE
+}
 
 // Simple abstract domain for the types of lines in an .rst
 func classifyLine(line string) LineClass {
-  if len(line)==0 {
-    return Blank
-  }
-  // If you are not me then don't use tabs, haha only serious
-  expanded := strings.Replace(line,"\t","  ",-1)
-  text := strings.TrimLeft( expanded," " )
-  indent := len(expanded) - len(text)
-  if indent>0 {
-    return Indented
-  }
+    if len(line)==0 {
+        return LineClass{0,Blank}
+    }
+    // Tabs are defined in the .rst "spec"
+    expanded := strings.Replace(line,"\t","        ",-1)
+    if len(strings.Trim(expanded,"="))==0 {
+        return LineClass{0,SectionHeading}
+    }
+    if len(strings.Trim(expanded,"-"))==0 {
+        return LineClass{0,SubsectionHeading}
+    }
 
-  if len(strings.Trim(expanded,"="))==0 {
-    return SectionHeading
-  }
-  if len(strings.Trim(expanded,"-"))==0 {
-    return SubsectionHeading
-  }
-  if line[0:2]==".." {
-    return Directive
-  }
-  if line[0:2]=="* " {
-    return Bulleted
-  }
-  if regexp.MustCompile("[1-9][0-9]*[.] ").MatchString(line) {
-    return Numbered
-  }
-  slices := strings.Split(line,":")
-  if len(slices)==3  &&  
-     len(slices[0])==0  &&  
-     !strings.Contains(slices[1]," ") {
-    return Attribute
-  }
-  return Other
+    text := strings.TrimLeft( expanded," " )
+    indent := len(expanded) - len(text)
+
+    if text[0:2]==".." {
+      return LineClass{indent,Directive}
+    }
+    if text[0:2]=="* " {
+      return LineClass{indent,Bulleted}
+    }
+    if regexp.MustCompile("[1-9][0-9]*[.] ").MatchString(text) {
+      return LineClass{indent,Numbered}
+    }
+
+    slices := strings.Split(line,":")
+    if len(slices)==3     &&
+       len(slices[0])==0  &&
+       !strings.Contains(slices[1]," ") {
+      return LineClass{indent,Attribute}
+    }
+
+    return LineClass{indent,Other}
 }
 
 type ParseState int
