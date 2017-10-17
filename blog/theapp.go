@@ -109,7 +109,7 @@ func (doc *Document) newFragment(style FragStyle, content string) {
         doc.newBlock(BsNone)
     }
     curBlock := &curSection.blocks[ len(curSection.blocks)-1 ]
-    curBlock.frags = append( curBlock.frags, DocFrag{style:style, cnt:content} )
+    curBlock.frags = append(curBlock.frags, DocFrag{style:style, cnt:content})
 }
 
 // Transition function
@@ -224,6 +224,9 @@ func classifyLine(line string) LineClass {
   if line[0:2]=="* " {
     return Bulleted
   }
+  if regexp.MustCompile("[1-9][0-9]*[.] ").MatchString(line) {
+    return Numbered
+  }
   slices := strings.Split(line,":")
   if len(slices)==3  &&  
      len(slices[0])==0  &&  
@@ -270,7 +273,7 @@ func parseDirective(doc *Document, name string, extra string) {
 
 func (b *DocBlock) processInlines() {
   if len(b.frags)==0 { return }     // Topic Begin/End markers
-  if len(b.frags)!=1 { panic("Blocks should star with one fragment") }
+  if len(b.frags)!=1 { b.dump(); panic("Blocks should star with one fragment") }
   // TODO: Initial block should be single fragment
   //      Find inline markers and split into multi-frags...
   fmt.Println("Initial block size: ",len(b.frags))
@@ -465,14 +468,18 @@ func (b *DocBlock) flatten() string {
   return string(res)
 }
 
+func (block *DocBlock) dump() {
+    fmt.Println("Block",len(block.frags),toString(block.style))
+    for f,frag := range(block.frags) {
+        fmt.Println(" Frag",f,frag.style,frag.cnt)
+    }
+}
+
 func (doc *Document) dump() {
     for s,section := range(doc.sections) {
         fmt.Println("Section",s,section.title)
-        for b,block := range(section.blocks) {
-            fmt.Println("Block",b,len(block.frags),toString(block.style))
-            for f,frag := range(block.frags) {
-                fmt.Println(" Frag",f,frag.style,frag.cnt)
-            }
+        for _,block := range(section.blocks) {
+            block.dump()
         }
     }
 }
