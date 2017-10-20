@@ -1,5 +1,5 @@
 package main
-
+/*
 import (
       "net/http"
       "fmt"
@@ -186,59 +186,6 @@ func (doc *Document) renderHtml(out http.ResponseWriter) {
     out.Write( []byte("</body></html>") )
 }
 
-type LineClassE int
-const (
-      Blank LineClassE = iota
-      SectionHeading
-      SubsectionHeading
-      Directive
-      Bulleted
-      Numbered
-      Attribute
-      Other
-)
-type LineClass struct {
-    indent int
-    kind   LineClassE
-}
-
-// Simple abstract domain for the types of lines in an .rst
-func classifyLine(line string) LineClass {
-    if len(line)==0 {
-        return LineClass{0,Blank}
-    }
-    // Tabs are defined in the .rst "spec"
-    expanded := strings.Replace(line,"\t","        ",-1)
-    if len(strings.Trim(expanded,"="))==0 {
-        return LineClass{0,SectionHeading}
-    }
-    if len(strings.Trim(expanded,"-"))==0 {
-        return LineClass{0,SubsectionHeading}
-    }
-
-    text := strings.TrimLeft( expanded," " )
-    indent := len(expanded) - len(text)
-
-    if text[0:2]==".." {
-      return LineClass{indent,Directive}
-    }
-    if text[0:2]=="* " {
-      return LineClass{indent,Bulleted}
-    }
-    if regexp.MustCompile("[1-9][0-9]*[.] ").MatchString(text) {
-      return LineClass{indent,Numbered}
-    }
-
-    slices := strings.Split(line,":")
-    if len(slices)==3     &&
-       len(slices[0])==0  &&
-       !strings.Contains(slices[1]," ") {
-      return LineClass{indent,Attribute}
-    }
-
-    return LineClass{indent,Other}
-}
-
 type ParseState int
 const (
         Default ParseState = iota
@@ -403,10 +350,6 @@ func parseRst(src string) Document {
             doc.newFragment(FsNone, lines[i][2:])
             state = InBullet
           case Blank:   // Drop
-          /*case Blank:
-            fmt.Println("Found a directive", cur)
-            state = Default
-            cur   = ""*/
           default:
             fmt.Println("Dropping in ",state, lines[i])
         }
@@ -510,4 +453,4 @@ func handler(out http.ResponseWriter, req *http.Request) {
 func main() {
     http.HandleFunc("/", handler)
     http.ListenAndServe(":8080", nil)
-}
+}*/

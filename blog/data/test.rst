@@ -1,9 +1,13 @@
 ===============================================
 A title block
+that spans lines
 ===============================================
 
-:Author: the author
-:Date:   a thing
+Here is a paragraph
+perhaps it acts as
+a kind of subtitle-intro thang
+
+    By indenting perhaps we quote?
 
 Section heading
 ==================
