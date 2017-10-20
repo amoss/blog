@@ -1,9 +1,9 @@
 package main
 import (
-    "bytes"
-    "regexp"
-    "bufio"
     "os"
+    "bufio"
+    "regexp"
+    "bytes"
     "fmt"
 )
 type LineClassE int
@@ -71,142 +71,18 @@ func classify(line []byte) LineClass {
 
 }
 
-func main() {
-  fd,_    := os.Open(os.Args[1])
-  scanner := bufio.NewScanner(fd)
-  lines   := make( []LineClass, 0, 1024 )
-  for scanner.Scan() {
-    lines = append( lines, classify( scanner.Bytes() ) )
-  }
-  fmt.Println(lines[0])
-  parse(lines)
-}
+func LineScanner(path string) *chan LineClass {
+    output := make(chan LineClass)
 
-type ParseSt struct {
-    input     []LineClass
-    indent    int
-    pos       int
-    //output    chan Block
-}
-type StateFn func(*ParseSt) StateFn
-func (st *ParseSt) String() string {
-    return fmt.Sprintf("PSt{Line %d/%d Ind %d}", st.pos, len(st.input), st.indent)
-}
-
-
-func (st *ParseSt) peek() *LineClass{
-    if st.pos == len(st.input) { return nil }
-    res := &st.input[ st.pos ]
-    return res
-}
-
-
-func ParseSt_Init(st *ParseSt) StateFn {
-    fmt.Println("ParseInit:", st, st.peek())
-    cur := st.peek()
-    switch cur.kind {
-        case SectionHeading:
-            st.pos++
-            return ParseSt_InHeading
-        case Other:
-            st.indent = cur.indent
-            return ParseSt_InPara
-        case Blank:
-            st.pos++
-            return ParseSt_Init
-        case Directive:
-            st.pos++;
-            if st.input[st.pos].kind == Blank {
-                st.pos++;
-                st.indent = st.input[st.pos].indent
-                return ParseSt_InDirective
-            } else {
-                st.indent = len(st.input[st.pos-1].marker)
-                return ParseSt_InDirective
-            }
-        default:
-            panic("Don't know how to parse "+cur.String())
-    }
-    return nil
-}
-
-
-func ParseSt_InPara(st *ParseSt) StateFn {
-    fmt.Println("ParseInPara:", st, st.peek())
-    end  := st.pos
-    size := 0
-    indent := st.indent
-    for st.input[end].kind==Other && end<len(st.input) &&
-        st.input[end].indent==indent {
-        size += len(st.input[end].body)+1
-        end++
-    }
-    body := make( []byte,0,size )
-    for i := st.pos; i<end; i++ {
-        if i!=st.pos { body = append(body, byte(' ')) }
-        body = append(body, st.input[i].body...)
-    }
-    fmt.Println("ParseInPara:", end, st.input[end])
-    switch st.input[end].kind {
-        case Blank:
-            fmt.Printf("Emit: Paragraph(%s)\n", body)
-            st.pos = end
-            st.pos++;
-            return ParseSt_Init
-        case SectionHeading:
-            if end-st.pos > 1 {
-                fmt.Println("Ambiguous para/section heading: use blank")
-                st.pos = end
-                st.pos++
-                return ParseSt_Init
-            }
-            fmt.Printf("Emit: MediumHeading(%s)\n", body)
-            st.pos = end
-            st.pos++;
-            return ParseSt_Init
-        case SubsectionHeading:
-            if end-st.pos > 1 {
-                fmt.Println("Ambiguous para/section subheading: use blank")
-                st.pos = end
-                st.pos++
-                return ParseSt_Init
-            }
-            fmt.Printf("Emit: SmallHeading(%s)\n", body)
-            st.pos = end
-            st.pos++;
-            return ParseSt_Init
-        default:
-            panic("Can't end a paragraph with "+string(st.input[st.pos].kind))
-    }
-}
-
-
-func ParseSt_InHeading(st *ParseSt) StateFn {
-    fmt.Println("ParseInHeading:", st, st.peek())
-    end  := st.pos
-    size := 0
-    for st.input[end].kind==Other && end<len(st.input) {
-        size += len(st.input[end].body)+1
-        end++
-    }
-    title := make( []byte,0,size )
-    for i := st.pos; i<end; i++ {
-        if i!=st.pos { title = append(title, byte(' ')) }
-        title = append(title, st.input[i].body...)
-    }
-    st.pos = end
-    if end==len(st.input) || st.input[end].kind!=SectionHeading {
-      panic("Unterminated heading")
-    }
-    st.pos++
-    fmt.Printf("Emit: BigSection(%s)\n", title)
-    return ParseSt_Init
-}
-
-func parse(input []LineClass) {
-  state := &ParseSt{input:input}
-  for stateFn := ParseSt_Init; stateFn != nil; {
-      stateFn = stateFn(state)
-  }
-
+    fd,err := os.Open(path)
+    if err!=nil { return nil }
+    scanner := bufio.NewScanner(fd)
+    go func() {
+        for scanner.Scan() {
+            line := classify( scanner.Bytes() )
+            fmt.Println("Lex:",line)
+            output <- line
+        }
+    }()
+    return &output
 }
