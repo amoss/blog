@@ -90,6 +90,8 @@ func ParseSt_Init(st *ParseSt) StateFn {
             st.body   = st.cur.body
             st.next()
             return ParseSt_Bulleted
+        case EOF:
+            return nil
         default:
             panic("Don't know how to parse "+st.cur.String())
     }
@@ -236,6 +238,20 @@ func ParseSt_InPara(st *ParseSt) StateFn {
     first := st.pos
 
     st.next()
+    // Not a regular para - make a definition list
+    if st.cur.indent > st.indent {
+        body   := st.cur.body
+        indent := st.cur.indent
+        st.next()
+        for st.cur.kind==Other && st.cur.indent==indent {
+            body = append(body, []byte(" ")...)
+            body = append(body, st.cur.body...)
+            st.next()
+        }
+        fmt.Printf("Emit: DefList(def=%s body=%s)\n", st.body, body)
+        st.indent = -1
+        return ParseSt_Init
+    }
     for st.cur.kind==Other && st.cur.indent==st.indent {
         body = append(body, byte(' '))
         body = append(body, st.cur.body...)

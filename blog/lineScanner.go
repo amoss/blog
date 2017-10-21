@@ -17,6 +17,7 @@ const (
       Numbered
       Attribute
       Other
+      EOF
 )
 type LineClass struct {
     indent int
@@ -84,6 +85,8 @@ func LineScanner(path string) *chan LineClass {
             if lineScannerDbg { fmt.Println("Lex:",line) }
             output <- line
         }
+        output <- LineClass{kind:EOF}
+        close(output)
     }()
     return &output
 }
