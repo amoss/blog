@@ -26,6 +26,8 @@ fkdjfkdj kjdfkj dkkdjfk
 
 .. shell::
 
+  blah
+  blah
 
   Render as shell
   Continue with this line

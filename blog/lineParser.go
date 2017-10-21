@@ -17,6 +17,8 @@ type ParseSt struct {
     cur       LineClass
     indent    int
     pos       int
+    body      []byte
+    directive []byte
     //output    chan Block
 }
 type StateFn func(*ParseSt) StateFn
@@ -42,18 +44,80 @@ func ParseSt_Init(st *ParseSt) StateFn {
             st.next()
             return ParseSt_Init
         case Directive:
-            mlen := len(st.cur.marker)
+            //mlen   := len(st.cur.marker)
+            st.body      = st.cur.body
+            st.directive = st.cur.marker
+            st.indent    = -1
             st.next()
-            if st.cur.kind == Blank {
-                st.next()
+            return ParseSt_InDirective
+/*
+            if st.cur.kind == Other {
                 st.indent = st.cur.indent
+                st.body   = append(st.body, st.cur.body...)
                 return ParseSt_InDirective
+            } else if st.cur.kind == Blank {
+                st.indent = -1
+                st.next()
+                return ParseSt_InLiteral    // Not always...
             } else {
-                st.indent = mlen
-                return ParseSt_InDirective
+                panic("Can't follow directive with "+string(st.cur.kind))
             }
+            // Have not handled quoting...
+*/
         default:
             panic("Don't know how to parse "+st.cur.String())
+    }
+    return nil
+}
+
+
+func ParseSt_InDirective(st *ParseSt) StateFn {
+    fmt.Println("ParseInDirective:", st, st.cur)
+    switch string(st.directive[3:len(st.directive)-2]) {
+        case "image":
+            fmt.Println("Emit: image block "+string(st.body))
+            return ParseSt_Init
+        case "shell":
+            if st.cur.kind!=Blank { 
+                panic("Must put shell lit in separate block") 
+            }
+            st.next()
+            st.indent = st.cur.indent
+            st.body   = make( []byte, 0, 1024)
+            for st.cur.indent>=st.indent  ||  st.cur.kind==Blank {
+                if len(st.body)>0 { st.body = append(st.body, byte('\n')) }
+                st.body = append(st.body, st.cur.body...)
+                st.next()
+            }
+            // Leave implicit newline from last Blank intact
+            st.next()
+            fmt.Println("Emit: Shell, Literal block...")
+            fmt.Println(string(st.body))
+            return ParseSt_Init
+        case "code":
+        case "topic":
+            fmt.Println("Emit: TopicBegin("+string(st.body)+")")
+            st.indent = -1
+            return ParseSt_InTopic
+        case "reference":
+        case "quote":
+        case "video":
+        default:
+            panic("Unrecognised directive "+string(st.directive))
+    }
+    panic("Missing implementation")
+}
+
+
+func ParseSt_InTopic(st *ParseSt) StateFn {
+    if st.cur.kind==Blank  &&  st.indent==-1 {
+        st.next()
+        st.indent = st.cur.indent
+    }
+    if st.cur.indent<st.indent {
+        // Eat trailing blank from body - it was a separator
+        fmt.Println("Emit: TopicEnd()")
+        return ParseSt_Init
     }
     return nil
 }
@@ -117,10 +181,6 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
     st.next()
     fmt.Printf("Emit: BigSection(%s)\n", body)
     return ParseSt_Init
-}
-
-func ParseSt_InDirective(st *ParseSt) StateFn {
-    return nil
 }
 
 func parse(input chan LineClass) {
