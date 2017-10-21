@@ -20,12 +20,43 @@ func main() {
             default: panic("Unrecognised arg "+arg)
         }
     }
-    lines := LineScanner(os.Args[1])
-    parse(*lines)
+    lines  := LineScanner(os.Args[1])
+    blocks := parse(*lines)
+    blk := <-blocks
+    for true {
+        var blk = <-blocks
+    }
 }
 
 func processMetadata(key []byte, value []byte) {
     fmt.Println("Dropping:",string(key),"=",string(value))
+}
+
+type BlockE int
+const (
+    BlkParagraph BlockE = iota
+    BlkBulleted
+    BlkNumbered
+    BlkBigHeading
+    BlkMediumHeading
+    BlkSmallHeading
+    BlkDefList
+    BlkTopicBegin
+    BlkTopicEnd
+    BlkImage
+    BlkVideo
+    BlkShell
+    BlkCode
+    BlkQuote
+    BlkReference
+)
+type Block struct {
+    kind    BlockE
+    body    []byte
+    author  []byte
+    title   []byte
+    url     []byte
+    heading []byte
 }
 
 type ParseSt struct {
@@ -36,7 +67,7 @@ type ParseSt struct {
     pos         int
     body        []byte
     directive   []byte
-    //output    chan Block
+    output      chan Block
 }
 type StateFn func(*ParseSt) StateFn
 func (st *ParseSt) String() string {
@@ -61,7 +92,7 @@ func ParseSt_Init(st *ParseSt) StateFn {
     if st.topicIndent>=0  &&
        st.cur.kind!=Blank &&
        st.cur.indent<st.topicIndent {
-        fmt.Println("Emit: TopicEnd()")
+        st.output <- Block{kind:BlkTopicEnd}
         st.topicIndent=-1
     }
     switch st.cur.kind {
@@ -103,7 +134,7 @@ func ParseSt_Numbered(st *ParseSt) StateFn {
     dbg(st)
     switch st.cur.kind {
         case Numbered:
-            fmt.Printf("Emit: Numbered(%s)\n", st.body)
+            st.output <- Block{kind:BlkNumbered,body:st.body}
             st.body   = st.cur.body
             st.indent = len(st.cur.marker)
             st.next()
@@ -114,7 +145,7 @@ func ParseSt_Numbered(st *ParseSt) StateFn {
             st.next()
             return ParseSt_Numbered
         case Blank:
-            fmt.Printf("Emit: Numbered(%s)\n", st.body)
+            st.output <- Block{kind:BlkNumbered,body:st.body}
             st.next()
             st.indent = -1
             return ParseSt_Init
@@ -127,7 +158,7 @@ func ParseSt_Bulleted(st *ParseSt) StateFn {
     dbg(st)
     switch st.cur.kind {
         case Bulleted:
-            fmt.Printf("Emit: Bullet(%s)\n", st.body)
+            st.output <- Block{kind:BlkBulleted,body:st.body}
             st.body   = st.cur.body
             st.indent = len(st.cur.marker)
             st.next()
@@ -138,7 +169,7 @@ func ParseSt_Bulleted(st *ParseSt) StateFn {
             st.next()
             return ParseSt_Bulleted
         case Blank:
-            fmt.Printf("Emit: Bullet(%s)\n", st.body)
+            st.output <- Block{kind:BlkBulleted,body:st.body}
             st.next()
             st.indent = -1
             return ParseSt_Init
@@ -152,10 +183,10 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
     dirName := st.directive[3:len(st.directive)-2]
     switch string(dirName) {
         case "image":
-            fmt.Println("Emit: image block "+string(st.body))
+            st.output <- Block{kind:BlkImage,body:st.body}
             return ParseSt_Init
         case "video":
-            fmt.Println("Emit: video block "+string(st.body))
+            st.output <- Block{kind:BlkVideo,body:st.body}
             return ParseSt_Init
         case "shell","code":
             if st.cur.kind!=Blank {
@@ -175,16 +206,14 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             // Missing terminating blank will not be detected - is it worth it?
             switch string(dirName) {
                 case "shell":
-                    fmt.Println("Emit: Shell, Literal block...")
-                    fmt.Println(string(st.body))
+                    st.output <- Block{kind:BlkShell,body:st.body}
                 case "code":
-                    fmt.Println("Emit: Code, Literal block...")
-                    fmt.Println(string(st.body))
+                    st.output <- Block{kind:BlkCode,body:st.body}
             }
             st.indent = -1
             return ParseSt_Init
         case "topic":
-            fmt.Println("Emit: TopicBegin("+string(st.body)+")")
+            st.output <- Block{kind:BlkTopicBegin,body:st.body}
             if st.cur.kind!=Blank { panic("Topic requires a blank") }
             st.next()
             if st.topicIndent!=-1 { panic("Cannot nest topics") }
@@ -201,8 +230,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
                 body = append(body, st.cur.body...)
                 st.next()
             }
-            fmt.Printf("Emit: Quote(attributation=%s body=%s)\n",
-                       st.body, body)
+            st.output <- Block{kind:BlkQuote,body:body,author:st.body}
             return ParseSt_Init
         default:
             panic("Unrecognised directive "+string(st.directive))
@@ -224,8 +252,7 @@ func ParseSt_Reference(st *ParseSt) StateFn {
         }
         st.next()
     }
-    fmt.Printf("Emit: Reference(title=%s author=%s url=%s)\n",
-                title, author, url)
+    st.output <- Block{kind:BlkReference,title:title,author:author,url:url}
     return ParseSt_Init
 }
 
@@ -248,7 +275,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
             body = append(body, st.cur.body...)
             st.next()
         }
-        fmt.Printf("Emit: DefList(def=%s body=%s)\n", st.body, body)
+        st.output <- Block{kind:BlkDefList,body:body,heading:st.body}
         st.indent = -1
         return ParseSt_Init
     }
@@ -259,7 +286,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
     }
     switch st.cur.kind {
         case Blank:
-            fmt.Printf("Emit: Paragraph(%s)\n", body)
+            st.output <- Block{kind:BlkParagraph,body:body}
             st.next()
             st.indent = -1
             return ParseSt_Init
@@ -267,7 +294,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
             if st.pos-first > 1 {
                 fmt.Println("Ambiguous para/section heading: use blank")
             } else {
-                fmt.Printf("Emit: MediumHeading(%s)\n", body)
+                st.output <- Block{kind:BlkMediumHeading,body:body}
             }
             st.next()  // eat it
             st.indent = -1
@@ -276,7 +303,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
             if st.pos-first > 1 {
                 fmt.Println("Ambiguous para/section heading: use blank")
             } else {
-                fmt.Printf("Emit: SmallHeading(%s)\n", body)
+                st.output <- Block{kind:BlkSmallHeading,body:body}
             }
             st.next()  // eat it
             st.indent = -1
@@ -312,12 +339,16 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
     return ParseSt_Init
 }
 
-func parse(input chan LineClass) {
+func parse(input chan LineClass) chan Block {
   state := &ParseSt{input:input}
   state.indent = -1
   state.topicIndent = -1
-  for stateFn := ParseSt_Init; stateFn != nil; {
-      stateFn = stateFn(state)
-  }
+  state.output = make(chan Block)
+  go func() {
+      for stateFn := ParseSt_Init; stateFn != nil; {
+          stateFn = stateFn(state)
+      }
+  }()
+  return state.output
 
 }
