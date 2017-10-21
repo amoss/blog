@@ -57,7 +57,7 @@ func classify(line []byte) LineClass {
     nums := regexp.MustCompile("^[1-9][0-9]*[.] ")
     m := nums.FindSubmatch(text)
     if m!=nil {
-      return LineClass{indent,m[0],text[indent+len(m[0]):],Numbered}
+      return LineClass{indent,m[0],text[len(m[0]):],Numbered}
     }
 
     slices := bytes.Split(text,[]byte(":"))

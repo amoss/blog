@@ -29,12 +29,13 @@ func processMetadata(key []byte, value []byte) {
 }
 
 type ParseSt struct {
-    input     chan LineClass
-    cur       LineClass
-    indent    int
-    pos       int
-    body      []byte
-    directive []byte
+    input       chan LineClass
+    cur         LineClass
+    indent      int
+    topicIndent int
+    pos         int
+    body        []byte
+    directive   []byte
     //output    chan Block
 }
 type StateFn func(*ParseSt) StateFn
@@ -57,6 +58,12 @@ func dbg(st *ParseSt) {
 
 func ParseSt_Init(st *ParseSt) StateFn {
     dbg(st)
+    if st.topicIndent>=0  &&
+       st.cur.kind!=Blank &&
+       st.cur.indent<st.topicIndent {
+        fmt.Println("Emit: TopicEnd()")
+        st.topicIndent=-1
+    }
     switch st.cur.kind {
         case SectionHeading:
             st.next()
@@ -73,20 +80,16 @@ func ParseSt_Init(st *ParseSt) StateFn {
             st.indent    = -1
             st.next()
             return ParseSt_InDirective
-/*
-            if st.cur.kind == Other {
-                st.indent = st.cur.indent
-                st.body   = append(st.body, st.cur.body...)
-                return ParseSt_InDirective
-            } else if st.cur.kind == Blank {
-                st.indent = -1
-                st.next()
-                return ParseSt_InLiteral    // Not always...
-            } else {
-                panic("Can't follow directive with "+string(st.cur.kind))
-            }
-            // Have not handled quoting...
-*/
+        case Numbered:
+            st.indent = len(st.cur.marker)
+            st.body   = st.cur.body
+            st.next()
+            return ParseSt_Numbered
+        case Bulleted:
+            st.indent = len(st.cur.marker)
+            st.body   = st.cur.body
+            st.next()
+            return ParseSt_Bulleted
         default:
             panic("Don't know how to parse "+st.cur.String())
     }
@@ -94,37 +97,111 @@ func ParseSt_Init(st *ParseSt) StateFn {
 }
 
 
+func ParseSt_Numbered(st *ParseSt) StateFn {
+    dbg(st)
+    switch st.cur.kind {
+        case Numbered:
+            fmt.Printf("Emit: Numbered(%s)\n", st.body)
+            st.body   = st.cur.body
+            st.indent = len(st.cur.marker)
+            st.next()
+            return ParseSt_Numbered
+        case Other:
+            st.body = append(st.body, []byte(" ")...)
+            st.body = append(st.body, st.cur.body...)
+            st.next()
+            return ParseSt_Numbered
+        case Blank:
+            fmt.Printf("Emit: Numbered(%s)\n", st.body)
+            st.next()
+            st.indent = -1
+            return ParseSt_Init
+        default: panic("Can't continue numbers with "+string(st.cur.kind))
+    }
+}
+
+
+func ParseSt_Bulleted(st *ParseSt) StateFn {
+    dbg(st)
+    switch st.cur.kind {
+        case Bulleted:
+            fmt.Printf("Emit: Bullet(%s)\n", st.body)
+            st.body   = st.cur.body
+            st.indent = len(st.cur.marker)
+            st.next()
+            return ParseSt_Bulleted
+        case Other:
+            st.body = append(st.body, []byte(" ")...)
+            st.body = append(st.body, st.cur.body...)
+            st.next()
+            return ParseSt_Bulleted
+        case Blank:
+            fmt.Printf("Emit: Bullet(%s)\n", st.body)
+            st.next()
+            st.indent = -1
+            return ParseSt_Init
+        default: panic("Can't continue bullets with "+string(st.cur.kind))
+    }
+}
+
+
 func ParseSt_InDirective(st *ParseSt) StateFn {
     dbg(st)
-    switch string(st.directive[3:len(st.directive)-2]) {
+    dirName := st.directive[3:len(st.directive)-2]
+    switch string(dirName) {
         case "image":
             fmt.Println("Emit: image block "+string(st.body))
             return ParseSt_Init
-        case "shell":
-            if st.cur.kind!=Blank { 
-                panic("Must put shell lit in separate block") 
+        case "video":
+            fmt.Println("Emit: video block "+string(st.body))
+            return ParseSt_Init
+        case "shell","code":
+            if st.cur.kind!=Blank {
+                panic("Must put shell lit in separate block")
             }
             st.next()
             st.indent = st.cur.indent
+            fmt.Println("Scanning literal with indent of",st.indent)
             st.body   = make( []byte, 0, 1024)
             for st.cur.indent>=st.indent  ||  st.cur.kind==Blank {
                 if len(st.body)>0 { st.body = append(st.body, byte('\n')) }
                 st.body = append(st.body, st.cur.body...)
                 st.next()
             }
+            if st.cur.kind==Blank { st.next() }
             // Leave implicit newline from last Blank intact
-            st.next()
-            fmt.Println("Emit: Shell, Literal block...")
-            fmt.Println(string(st.body))
+            // Missing terminating blank will not be detected - is it worth it?
+            switch string(dirName) {
+                case "shell":
+                    fmt.Println("Emit: Shell, Literal block...")
+                    fmt.Println(string(st.body))
+                case "code":
+                    fmt.Println("Emit: Code, Literal block...")
+                    fmt.Println(string(st.body))
+            }
+            st.indent = -1
             return ParseSt_Init
-        case "code":
         case "topic":
             fmt.Println("Emit: TopicBegin("+string(st.body)+")")
-            st.indent = -1
-            return ParseSt_InTopic
+            if st.cur.kind!=Blank { panic("Topic requires a blank") }
+            st.next()
+            if st.topicIndent!=-1 { panic("Cannot nest topics") }
+            st.topicIndent = st.cur.indent
+            return ParseSt_Init
         case "reference":
+            return ParseSt_Reference
         case "quote":
-        case "video":
+            if st.cur.kind!=Blank { panic("Need a blank after quote") }
+            st.next()
+            body := []byte("")
+            for st.cur.kind==Other && st.cur.indent>0 {
+                if len(body)>0 { body = append(body, []byte(" ")...) }
+                body = append(body, st.cur.body...)
+                st.next()
+            }
+            fmt.Printf("Emit: Quote(attributation=%s body=%s)\n",
+                       st.body, body)
+            return ParseSt_Init
         default:
             panic("Unrecognised directive "+string(st.directive))
     }
@@ -132,18 +209,22 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
 }
 
 
-func ParseSt_InTopic(st *ParseSt) StateFn {
-    dbg(st)
-    if st.cur.kind==Blank  &&  st.indent==-1 {
+func ParseSt_Reference(st *ParseSt) StateFn {
+    title  := []byte("")
+    author := []byte("")
+    url    := []byte("")
+    for st.cur.kind==Attribute && st.cur.indent>0 {
+        switch string(st.cur.marker) {
+            case ":title:":  title = st.cur.body
+            case ":author:": author = st.cur.body
+            case ":url:":    url = st.cur.body
+            default:       panic("Unknown refererence attribute "+string(st.cur.marker))
+        }
         st.next()
-        st.indent = st.cur.indent
     }
-    if st.cur.indent<st.indent {
-        // Eat trailing blank from body - it was a separator
-        fmt.Println("Emit: TopicEnd()")
-        return ParseSt_Init
-    }
-    return nil
+    fmt.Printf("Emit: Reference(title=%s author=%s url=%s)\n",
+                title, author, url)
+    return ParseSt_Init
 }
 
 
@@ -164,6 +245,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
         case Blank:
             fmt.Printf("Emit: Paragraph(%s)\n", body)
             st.next()
+            st.indent = -1
             return ParseSt_Init
         case SectionHeading:
             if st.pos-first > 1 {
@@ -172,6 +254,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                 fmt.Printf("Emit: MediumHeading(%s)\n", body)
             }
             st.next()  // eat it
+            st.indent = -1
             return ParseSt_Init
         case SubsectionHeading:
             if st.pos-first > 1 {
@@ -180,6 +263,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                 fmt.Printf("Emit: SmallHeading(%s)\n", body)
             }
             st.next()  // eat it
+            st.indent = -1
             return ParseSt_Init
         default:
             panic("Can't end a paragraph with "+string(st.cur.kind))
@@ -193,7 +277,7 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
     body = append(body,st.cur.body...)
 
     st.next()
-    for st.cur.kind==Other && st.cur.indent==st.indent {
+    for st.cur.kind==Other && st.cur.indent==0 {
         body = append(body, byte(' '))
         body = append(body, st.cur.body...)
         st.next()
@@ -214,6 +298,8 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
 
 func parse(input chan LineClass) {
   state := &ParseSt{input:input}
+  state.indent = -1
+  state.topicIndent = -1
   for stateFn := ParseSt_Init; stateFn != nil; {
       stateFn = stateFn(state)
   }
