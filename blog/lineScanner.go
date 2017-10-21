@@ -6,6 +6,7 @@ import (
     "bytes"
     "fmt"
 )
+var lineScannerDbg bool = false
 type LineClassE int
 const (
       Blank LineClassE = iota
@@ -80,7 +81,7 @@ func LineScanner(path string) *chan LineClass {
     go func() {
         for scanner.Scan() {
             line := classify( scanner.Bytes() )
-            fmt.Println("Lex:",line)
+            if lineScannerDbg { fmt.Println("Lex:",line) }
             output <- line
         }
     }()

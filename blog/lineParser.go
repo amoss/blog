@@ -6,10 +6,26 @@ import (
     //"bufio"
     "os"
     "fmt"
+    "runtime"
 )
+var lineParserDbg = false
+var lineParserStDbg = false
+
 func main() {
+    for _,arg := range os.Args[2:] {
+        switch arg {
+            case "--lines":  lineScannerDbg  = true
+            case "--parse":  lineParserStDbg = true
+            case "--blocks": lineParserDbg   = true
+            default: panic("Unrecognised arg "+arg)
+        }
+    }
     lines := LineScanner(os.Args[1])
     parse(*lines)
+}
+
+func processMetadata(key []byte, value []byte) {
+    fmt.Println("Dropping:",string(key),"=",string(value))
 }
 
 type ParseSt struct {
@@ -31,9 +47,16 @@ func (p *ParseSt) next() {
     p.pos++
 }
 
+func dbg(st *ParseSt) {
+    pc,_,_,_ := runtime.Caller(1)
+    callingName := runtime.FuncForPC(pc).Name()
+    if lineParserStDbg {
+        fmt.Printf("LineParser: %s %s %s\n", callingName, st, st.cur)
+    }
+}
 
 func ParseSt_Init(st *ParseSt) StateFn {
-    fmt.Println("ParseInit:", st, st.cur)
+    dbg(st)
     switch st.cur.kind {
         case SectionHeading:
             st.next()
@@ -72,7 +95,7 @@ func ParseSt_Init(st *ParseSt) StateFn {
 
 
 func ParseSt_InDirective(st *ParseSt) StateFn {
-    fmt.Println("ParseInDirective:", st, st.cur)
+    dbg(st)
     switch string(st.directive[3:len(st.directive)-2]) {
         case "image":
             fmt.Println("Emit: image block "+string(st.body))
@@ -110,6 +133,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
 
 
 func ParseSt_InTopic(st *ParseSt) StateFn {
+    dbg(st)
     if st.cur.kind==Blank  &&  st.indent==-1 {
         st.next()
         st.indent = st.cur.indent
@@ -124,7 +148,7 @@ func ParseSt_InTopic(st *ParseSt) StateFn {
 
 
 func ParseSt_InPara(st *ParseSt) StateFn {
-    fmt.Println("ParseInPara:", st, st.cur)
+    dbg(st)
     st.indent = st.cur.indent
     body := make( []byte,0,1024 )
     body = append(body, st.cur.body...)
@@ -164,7 +188,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
 
 
 func ParseSt_InHeading(st *ParseSt) StateFn {
-    fmt.Println("ParseInHeading:", st, st.cur)
+    dbg(st)
     body := make( []byte,0,1024 )
     body = append(body,st.cur.body...)
 
@@ -180,6 +204,11 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
     }
     st.next()
     fmt.Printf("Emit: BigSection(%s)\n", body)
+    for st.cur.kind==Attribute {
+        processMetadata(st.cur.marker[1:len(st.cur.marker)-1],
+                        st.cur.body)
+        st.next()
+    }
     return ParseSt_Init
 }
 

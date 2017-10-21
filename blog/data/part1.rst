@@ -1,6 +1,11 @@
 ============================================
 Part I: Lua
 ============================================
+:Author: Dr Andrew Moss
+:Date: 2017 LP4
+:CourseCode: DV1564
+:CourseName: Interpreters and Scripting
+:Style: Slides
 
 
 +-----------------------------------+------------------------------------------+
@@ -13,11 +18,6 @@ Part I: Lua
 + Reading Advice                    + To be added                              |
 +-----------------------------------+------------------------------------------+
 
-:Author: Dr Andrew Moss
-:Date: 2017 LP4
-:CourseCode: DV1564
-:CourseName: Interpreters and Scripting
-:Style: Slides
 
 Interpreters
 ------------

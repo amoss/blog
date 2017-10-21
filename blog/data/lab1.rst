@@ -1,7 +1,6 @@
 ========================================================
 Lab 1: The Lua Interpreter and Irrlicht
 ========================================================
-
 :Author: Dr Andrew Moss
 :Date: 2017 April 12
 :CourseCode: DV1564
@@ -11,7 +10,7 @@ Lab 1: The Lua Interpreter and Irrlicht
 Purpose
 ------------
 
-The purpose of today's session is to gain familiarity with the 
+The purpose of today's session is to gain familiarity with the
 linux environment in the labs, the compiler tool-chain and 
 building against source packages.
 
