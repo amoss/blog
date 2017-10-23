@@ -22,10 +22,7 @@ func main() {
     }
     lines  := LineScanner(os.Args[1])
     blocks := parse(*lines)
-    blk := <-blocks
-    for true {
-        var blk = <-blocks
-    }
+    renderHtml(blocks)
 }
 
 func processMetadata(key []byte, value []byte) {
@@ -348,6 +345,7 @@ func parse(input chan LineClass) chan Block {
       for stateFn := ParseSt_Init; stateFn != nil; {
           stateFn = stateFn(state)
       }
+      close(state.output)
   }()
   return state.output
 
