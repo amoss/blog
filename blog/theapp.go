@@ -1,12 +1,13 @@
 package main
-/*
+
 import (
       "net/http"
       "fmt"
       "io/ioutil"
-      "strings"
-      "regexp"
+      //"strings"
+      //"regexp"
 )
+/*
 
 type FragStyle int
 const (
@@ -429,28 +430,53 @@ func (doc *Document) dump() {
         }
     }
 }
+*/
 
 func handler(out http.ResponseWriter, req *http.Request) {
-  fmt.Println("Req:", req.URL)
-  switch req.URL.Path {
-      case "/styles.css":
-        cnt,_ := ioutil.ReadFile("data/styles.css")
-        out.Write(cnt)
-      default:
-        filename := "data" + req.URL.Path + ".rst"
-        cnt, err := ioutil.ReadFile(filename)
-        if err==nil {
-          doc := parseRst( string(cnt) )
-          doc.dump()
-          doc.processInlines()
-          doc.renderHtml(out)
-        } else {
-          fmt.Println(err)
-        }
-  }
+    fmt.Println("Req:", req.URL)
+    switch req.URL.Path {
+        case "/styles.css":
+            cnt,_ := ioutil.ReadFile("data/styles.css")
+            out.Write(cnt)
+        default:
+            filename := "data" + req.URL.Path + ".rst"
+            // PANIC in trace comes from lack of error checking
+            // Video and images not available...
+            lines  := LineScanner(filename)
+            blocks := parse(*lines)
+            out.Write( renderHtml(blocks) )
+
+            /*cnt, err := ioutil.ReadFile(filename)
+            if err==nil {
+
+
+              doc := parseRst( string(cnt) )
+              doc.dump()
+              doc.processInlines()
+              doc.renderHtml(out)
+            } else {
+              fmt.Println(err)
+            }*/
+    }
 }
 
 func main() {
     http.HandleFunc("/", handler)
     http.ListenAndServe(":8080", nil)
+}
+
+/*
+func main() {
+    for _,arg := range os.Args[2:] {
+        switch arg {
+            case "--lines":  lineScannerDbg  = true
+            case "--parse":  lineParserStDbg = true
+            case "--blocks": lineParserDbg   = true
+            default: panic("Unrecognised arg "+arg)
+        }
+    }
+    lines  := LineScanner(os.Args[1])
+    blocks := parse(*lines)
+    renderHtml(blocks)
 }*/
+

@@ -4,26 +4,11 @@ import (
     //"bytes"
     //"regexp"
     //"bufio"
-    "os"
     "fmt"
     "runtime"
 )
 var lineParserDbg = false
 var lineParserStDbg = false
-
-func main() {
-    for _,arg := range os.Args[2:] {
-        switch arg {
-            case "--lines":  lineScannerDbg  = true
-            case "--parse":  lineParserStDbg = true
-            case "--blocks": lineParserDbg   = true
-            default: panic("Unrecognised arg "+arg)
-        }
-    }
-    lines  := LineScanner(os.Args[1])
-    blocks := parse(*lines)
-    renderHtml(blocks)
-}
 
 func processMetadata(key []byte, value []byte) {
     fmt.Println("Dropping:",string(key),"=",string(value))
