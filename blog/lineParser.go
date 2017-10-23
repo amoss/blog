@@ -322,15 +322,19 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
 }
 
 func parse(input chan LineClass) chan Block {
-  state := &ParseSt{input:input}
-  state.indent = -1
-  state.topicIndent = -1
-  state.output = make(chan Block)
-  go func() {
-      for stateFn := ParseSt_Init; stateFn != nil; {
-          stateFn = stateFn(state)
-      }
-      close(state.output)
+    state := &ParseSt{input:input}
+    state.indent = -1
+    state.topicIndent = -1
+    state.output = make(chan Block)
+    go func() {
+        defer func() {
+          close(state.output)
+          r := recover()
+          fmt.Println("Parser panic!", r)
+        }()
+        for stateFn := ParseSt_Init; stateFn != nil; {
+            stateFn = stateFn(state)
+        }
   }()
   return state.output
 

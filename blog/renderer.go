@@ -4,6 +4,20 @@ import (
     "fmt"
 )
 
+var pageHeader = []byte(`
+<html>
+<head>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+<link href="/styles.css" type="text/css" rel="stylesheet"></link>
+</head>
+<body>
+`)
+
+var pageFooter = []byte(`
+</body>
+</html>
+`)
+
 var tagNames = map[BlockE]string {
     BlkBulleted: "ul",
     BlkNumbered: "ol",
@@ -11,6 +25,7 @@ var tagNames = map[BlockE]string {
 
 func renderHtml(input chan Block) []byte {
     result := make([]byte, 0, 16384)
+    result = append(result, pageHeader...)
     lastKind := BlkParagraph
     for blk := range input {
         if tagNames[lastKind]!="" && blk.kind!=lastKind {
@@ -95,6 +110,7 @@ func renderHtml(input chan Block) []byte {
         }
         lastKind = blk.kind
     }
+    result = append(result, pageFooter...)
     return result
 }
 

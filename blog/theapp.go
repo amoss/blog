@@ -4,6 +4,7 @@ import (
       "net/http"
       "fmt"
       "io/ioutil"
+      "errors"
       //"strings"
       //"regexp"
 )
@@ -434,6 +435,13 @@ func (doc *Document) dump() {
 
 func handler(out http.ResponseWriter, req *http.Request) {
     fmt.Println("Req:", req.URL)
+    defer func() {
+        r:= recover()
+        if r!=nil {
+            http.Error(out, errors.New("Something went wrong :(").Error(),
+                       http.StatusInternalServerError)
+        }
+    }()
     switch req.URL.Path {
         case "/styles.css":
             cnt,_ := ioutil.ReadFile("data/styles.css")
@@ -443,20 +451,12 @@ func handler(out http.ResponseWriter, req *http.Request) {
             // PANIC in trace comes from lack of error checking
             // Video and images not available...
             lines  := LineScanner(filename)
-            blocks := parse(*lines)
-            out.Write( renderHtml(blocks) )
-
-            /*cnt, err := ioutil.ReadFile(filename)
-            if err==nil {
-
-
-              doc := parseRst( string(cnt) )
-              doc.dump()
-              doc.processInlines()
-              doc.renderHtml(out)
+            if lines!=nil {
+                blocks := parse(*lines)
+                out.Write( renderHtml(blocks) )
             } else {
-              fmt.Println(err)
-            }*/
+              fmt.Println("File not found!",filename)
+            }
     }
 }
 

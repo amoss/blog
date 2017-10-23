@@ -80,13 +80,20 @@ func LineScanner(path string) *chan LineClass {
     if err!=nil { return nil }
     scanner := bufio.NewScanner(fd)
     go func() {
+        defer func() {
+            close(output)
+            r := recover()
+            if r!=nil {
+                fmt.Println("Scanner panic!",r)
+            }
+        }()
+
         for scanner.Scan() {
             line := classify( scanner.Bytes() )
             if lineScannerDbg { fmt.Println("Lex:",line) }
             output <- line
         }
         output <- LineClass{kind:EOF}
-        close(output)
     }()
     return &output
 }
