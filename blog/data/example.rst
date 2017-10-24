@@ -1,10 +1,10 @@
 ===================================
-Example to demonstrate .rst subset
+Example to demonstrate .rst dialect
 used by parser
 ===================================
 :Author: Dr Andrew Moss
-:Date: October, 2017
-:Style: Page
+:Date:   October, 2017
+:Style:  Page
 
 The parser is written from scratch based on the .rst specification
 located `here <docutils.sourceforge.net/docs/ref/rst/restructuredtext.html>`_.
@@ -70,9 +70,10 @@ Block structures
   2. Changes in block-style are allowed
 
 .. reference::
-  :title:  Title of bilbiographic element
-  :author: Author will be rendered also
-  :url:    Will be converted to a link
+  :title:  The fancy-pants school of book authorship
+  :author: Dr F. Pants
+  :url:    http://link.to.go/here
+  :detail: 2nd edition, section 3 (pages 35-38)
 
 .. quote:: An unknown poet (1327)
 

@@ -42,6 +42,7 @@ type Block struct {
     heading []byte
     date    []byte
     style   []byte
+    detail  []byte
 }
 
 type ParseSt struct {
@@ -228,16 +229,18 @@ func ParseSt_Reference(st *ParseSt) StateFn {
     title  := []byte("")
     author := []byte("")
     url    := []byte("")
+    detail    := []byte("")
     for st.cur.kind==Attribute && st.cur.indent>0 {
         switch string(st.cur.marker) {
-            case ":title:":  title = st.cur.body
-            case ":author:": author = st.cur.body
-            case ":url:":    url = st.cur.body
+            case "title":  title = st.cur.body
+            case "author": author = st.cur.body
+            case "url":    url = st.cur.body
+            case "detail": detail = st.cur.body
             default:       panic("Unknown refererence attribute "+string(st.cur.marker))
         }
         st.next()
     }
-    st.output <- Block{kind:BlkReference,title:title,author:author,url:url}
+    st.output <- Block{kind:BlkReference,title:title,author:author,url:url,detail:detail}
     return ParseSt_Init
 }
 
@@ -321,15 +324,13 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
         "style"  : []byte(""),
     }
     for st.cur.kind==Attribute {
-        atName := string(st.cur.marker[1:len(st.cur.marker)-1])
+        atName := string(st.cur.marker)
         metadata[ strings.ToLower(atName) ] = bytes.TrimLeft(st.cur.body," ")
         st.next()
     }
-    fmt.Println("Frontmatter:",metadata)
     st.output <- Block{kind:BlkBigHeading, title:body,
                        author:metadata["author"],
                        date:metadata["date"], style:bytes.ToLower(metadata["style"]) }
-    fmt.Printf("Emit: BigSection(%s)\n", body)
     return ParseSt_Init
 }
 

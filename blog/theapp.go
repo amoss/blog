@@ -450,6 +450,9 @@ func handler(out http.ResponseWriter, req *http.Request) {
         case "/styles.css":
             cnt,_ := ioutil.ReadFile("data/styles.css")
             out.Write(cnt)
+        case "/book-icon.png":
+            cnt,_ := ioutil.ReadFile("data/book-icon.png")
+            out.Write(cnt)
         default:
             filename := "data" + req.URL.Path + ".rst"
             // PANIC in trace comes from lack of error checking

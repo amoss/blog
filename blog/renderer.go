@@ -111,12 +111,18 @@ func renderHtml(input chan Block) []byte {
                 result = append(result, []byte(".mov\" type=\"video/quicktime;\">")...)
                 result = append(result, []byte("</video>")...)
             case BlkReference:
-                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\"><tr><td rowspan=\"2\"><img src=\"book.icon.png\"/><a url=\"")...)
+                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"book-icon.png\"/></td>\n<td><a href=\"")...)
                 result = append(result, blk.url... )
                 result = append(result, []byte("\">")...)
                 result = append(result, blk.title... )
-                result = append(result, []byte("</a></td></tr>")...)
+                result = append(result, []byte("</a></td></tr><tr><td><i>")...)
                 result = append(result, blk.author... )
+                result = append(result, []byte("</i></td></tr>")...)
+                if blk.detail!=nil {
+                    result = append(result, []byte("<tr><td>")...)
+                    result = append(result, blk.detail... )
+                    result = append(result, []byte("</td></tr>")...)
+                }
                 result = append(result, []byte("</table></div>")...)
             case BlkDefList:
                 result = append(result, []byte("<dt>")...)

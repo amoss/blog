@@ -50,7 +50,7 @@ func classify(line []byte) LineClass {
     dir := regexp.MustCompile("^[.][.] [A-Za-z]+::")
     d := dir.FindSubmatch(text)
     if d!=nil {
-        return LineClass{indent,d[0],text[indent+len(d[0]):],Directive}
+        return LineClass{indent,d[0],text[len(d[0]):],Directive}
     }
     if bytes.Compare(text[0:2],[]byte("* "))==0 {
       return LineClass{indent, []byte("* "), text[2:], Bulleted}
@@ -61,12 +61,10 @@ func classify(line []byte) LineClass {
       return LineClass{indent,m[0],text[len(m[0]):],Numbered}
     }
 
-    slices := bytes.Split(text,[]byte(":"))
-    if len(slices)==3     &&
-       len(slices[0])==0  &&
-       !bytes.Contains(slices[1],[]byte(" ")) {
-      return LineClass{indent, text[0:2+len(slices[1])],
-                       text[2+len(slices[1]):],Attribute}
+    attribute := regexp.MustCompile("^:([A-Za-z]+): ")
+    a := attribute.FindSubmatch(text)
+    if a!=nil {
+        return LineClass{indent,a[1],bytes.TrimLeft(text[len(a[0]):]," "),Attribute}
     }
 
     return LineClass{indent,nil,text,Other}
