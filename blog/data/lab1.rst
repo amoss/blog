@@ -95,8 +95,6 @@ a library:
   > -rwxrwxr-x 1 amoss amoss 175648 apr  3 09:45 ./src/luac
   > -rw-rw-r-- 1 amoss amoss 441924 apr  3 09:45 ./src/liblua.a
 
-
-
 Task 1 : Building against the Lua interpreter
 ---------------------------------------------
 
@@ -232,6 +230,4 @@ Using the techniques described in the lectures (and documented in Chapter
   1  0
   2  -3
   3  0.5
-
-
 

@@ -444,14 +444,10 @@ func handler(out http.ResponseWriter, req *http.Request) {
         }
     }()
     switch req.URL.Path {
-        case "/page.css":
-            cnt,_ := ioutil.ReadFile("data/page.css")
-            out.Write(cnt)
-        case "/styles.css":
-            cnt,_ := ioutil.ReadFile("data/styles.css")
-            out.Write(cnt)
-        case "/book-icon.png":
-            cnt,_ := ioutil.ReadFile("data/book-icon.png")
+        case "/page.css", "/styles.css", "/book-icon.png",
+             "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
+             "/SourceSansPro-Regular.otf":
+            cnt,_ := ioutil.ReadFile("data" + req.URL.Path)
             out.Write(cnt)
         default:
             filename := "data" + req.URL.Path + ".rst"

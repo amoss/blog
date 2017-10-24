@@ -87,13 +87,13 @@ func renderHtml(input chan Block) []byte {
                 result = append(result, []byte("</p>")... )
                 result = append(result, []byte("</div>")... )
             case BlkMediumHeading:
+                result = append(result, []byte("<h1>")... )
+                result = append(result, inlineStyles(blk.body)... )
+                result = append(result, []byte("</h1>")... )
+            case BlkSmallHeading:
                 result = append(result, []byte("<h2>")... )
                 result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</h2>")... )
-            case BlkSmallHeading:
-                result = append(result, []byte("<h3>")... )
-                result = append(result, inlineStyles(blk.body)... )
-                result = append(result, []byte("</h3>")... )
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
                 result = append(result, blk.body... )   // No inline - literal

@@ -2,11 +2,10 @@ package main
 
 import (
     "bytes"
-    //"regexp"
-    //"bufio"
     "strings"
     "fmt"
     "runtime"
+    "runtime/debug"
 )
 var lineParserDbg = false
 var lineParserStDbg = false
@@ -184,6 +183,10 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             st.body   = make( []byte, 0, 1024)
             for st.cur.indent>=st.indent  ||  st.cur.kind==Blank {
                 if len(st.body)>0 { st.body = append(st.body, byte('\n')) }
+                if st.cur.indent-st.indent>0 {
+                    reIndent := bytes.Repeat([]byte(" "),st.cur.indent-st.indent)
+                    st.body = append(st.body, reIndent...)
+                }
                 st.body = append(st.body, st.cur.body...)
                 st.next()
             }
@@ -344,6 +347,7 @@ func parse(input chan LineClass) chan Block {
     go func() {
         defer func() {
           close(state.output)
+          debug.PrintStack()
           r := recover()
           fmt.Println("Parser panic!", r)
         }()
