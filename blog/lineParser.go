@@ -255,15 +255,17 @@ func ParseSt_InPara(st *ParseSt) StateFn {
     st.next()
     // Not a regular para - make a definition list
     if st.cur.indent > st.indent {
-        body   := st.cur.body
-        indent := st.cur.indent
+        heading := body
+        body := make( []byte,0,1024 )
+        body  = append(body, st.cur.body...)
+        indent  := st.cur.indent
         st.next()
         for st.cur.kind==Other && st.cur.indent==indent {
             body = append(body, []byte(" ")...)
             body = append(body, st.cur.body...)
             st.next()
         }
-        st.output <- Block{kind:BlkDefList,body:body,heading:st.body}
+        st.output <- Block{kind:BlkDefList,body:body,heading:heading}
         st.indent = -1
         return ParseSt_Init
     }
