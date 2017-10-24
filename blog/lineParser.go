@@ -344,13 +344,12 @@ func parse(input chan LineClass) chan Block {
     state.indent = -1
     state.topicIndent = -1
     state.output = make(chan Block)
+    defer func() {
+      close(state.output)
+      r := recover()
+      fmt.Printf("Parser panic! %s %s\n", r, debug.Stack() )
+    }()
     go func() {
-        defer func() {
-          close(state.output)
-          debug.PrintStack()
-          r := recover()
-          fmt.Println("Parser panic!", r)
-        }()
         for stateFn := ParseSt_Init; stateFn != nil; {
             stateFn = stateFn(state)
         }
