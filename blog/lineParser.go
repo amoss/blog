@@ -1,9 +1,10 @@
 package main
 
 import (
-    //"bytes"
+    "bytes"
     //"regexp"
     //"bufio"
+    "strings"
     "fmt"
     "runtime"
 )
@@ -39,6 +40,8 @@ type Block struct {
     title   []byte
     url     []byte
     heading []byte
+    date    []byte
+    style   []byte
 }
 
 type ParseSt struct {
@@ -312,12 +315,21 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
       panic("Unterminated heading")
     }
     st.next()
-    fmt.Printf("Emit: BigSection(%s)\n", body)
+    metadata := map[string] []byte {
+        "author" : []byte("No author specified"),
+        "date"   : []byte("No date specified"),
+        "style"  : []byte(""),
+    }
     for st.cur.kind==Attribute {
-        processMetadata(st.cur.marker[1:len(st.cur.marker)-1],
-                        st.cur.body)
+        atName := string(st.cur.marker[1:len(st.cur.marker)-1])
+        metadata[ strings.ToLower(atName) ] = bytes.TrimLeft(st.cur.body," ")
         st.next()
     }
+    fmt.Println("Frontmatter:",metadata)
+    st.output <- Block{kind:BlkBigHeading, title:body,
+                       author:metadata["author"],
+                       date:metadata["date"], style:bytes.ToLower(metadata["style"]) }
+    fmt.Printf("Emit: BigSection(%s)\n", body)
     return ParseSt_Init
 }
 

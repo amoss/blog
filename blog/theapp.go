@@ -5,6 +5,7 @@ import (
       "fmt"
       "io/ioutil"
       "errors"
+      "os"
       //"strings"
       //"regexp"
 )
@@ -443,6 +444,9 @@ func handler(out http.ResponseWriter, req *http.Request) {
         }
     }()
     switch req.URL.Path {
+        case "/page.css":
+            cnt,_ := ioutil.ReadFile("data/page.css")
+            out.Write(cnt)
         case "/styles.css":
             cnt,_ := ioutil.ReadFile("data/styles.css")
             out.Write(cnt)
@@ -461,13 +465,8 @@ func handler(out http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-    http.HandleFunc("/", handler)
-    http.ListenAndServe(":8080", nil)
-}
-
-/*
-func main() {
-    for _,arg := range os.Args[2:] {
+    for _,arg := range os.Args[1:] {
+        fmt.Println(arg)
         switch arg {
             case "--lines":  lineScannerDbg  = true
             case "--parse":  lineParserStDbg = true
@@ -475,6 +474,12 @@ func main() {
             default: panic("Unrecognised arg "+arg)
         }
     }
+    http.HandleFunc("/", handler)
+    http.ListenAndServe(":8080", nil)
+}
+
+/*
+func main() {
     lines  := LineScanner(os.Args[1])
     blocks := parse(*lines)
     renderHtml(blocks)

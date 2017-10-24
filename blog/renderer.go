@@ -4,14 +4,24 @@ import (
     "fmt"
 )
 
-var pageHeader = []byte(`
+func makePageHeader(extra string) []byte {
+    result := make([]byte,0,1024)
+    result = append(result,[]byte(`
 <html>
 <head>
 <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 <link href="/styles.css" type="text/css" rel="stylesheet"></link>
-</head>
+`)...)
+    if extra != "" {
+        result = append(result, []byte("<link href=\"")...)
+        result = append(result, []byte(extra)...)
+        result = append(result, []byte(".css\" type=\"text/css\" rel=\"stylesheet\"></link>\n")...)
+    }
+    result = append(result, []byte(`</head>
 <body>
-`)
+`)...)
+    return result
+}
 
 var pageFooter = []byte(`
 </body>
@@ -25,7 +35,6 @@ var tagNames = map[BlockE]string {
 
 func renderHtml(input chan Block) []byte {
     result := make([]byte, 0, 16384)
-    result = append(result, pageHeader...)
     lastKind := BlkParagraph
     for blk := range input {
         if tagNames[lastKind]!="" && blk.kind!=lastKind {
@@ -47,10 +56,19 @@ func renderHtml(input chan Block) []byte {
                 result = append(result, []byte("<li>")... )
                 result = append(result, blk.body... )
                 result = append(result, []byte("</li>")... )
-            case BlkBigHeading:
+            case BlkBigHeading:     // Assume this is first in stream
+                result = append(result, makePageHeader(string(blk.style))...)
+                result = append(result, []byte("<div style=\"width:100%; background-color:#dddddd; padding:1rem\">")... )
                 result = append(result, []byte("<h1>")... )
-                result = append(result, blk.body... )
+                result = append(result, blk.title... )
                 result = append(result, []byte("</h1>")... )
+                result = append(result, []byte("<i>")... )
+                result = append(result, blk.author... )
+                result = append(result, []byte("</i>")... )
+                result = append(result, []byte("<p>")... )
+                result = append(result, blk.date... )
+                result = append(result, []byte("</p>")... )
+                result = append(result, []byte("</div>")... )
             case BlkMediumHeading:
                 result = append(result, []byte("<h2>")... )
                 result = append(result, blk.body... )
@@ -60,18 +78,19 @@ func renderHtml(input chan Block) []byte {
                 result = append(result, blk.body... )
                 result = append(result, []byte("</h3>")... )
             case BlkShell:
-                result = append(result, []byte("<div style=\"shell\">")... )
+                result = append(result, []byte("<div class=\"shell\">")... )
                 result = append(result, blk.body... )
                 result = append(result, []byte("</div>")... )
             case BlkCode:
-                result = append(result, []byte("<div style=\"code\">")... )
+                result = append(result, []byte("<div class=\"code\">")... )
                 result = append(result, blk.body... )
                 result = append(result, []byte("</div>")... )
             case BlkTopicBegin:
-                result = append(result, []byte("<Scallo><div style=\"ScalloHd\">")... )
+                result = append(result, []byte("<div class=\"Scallo\"><div class=\"ScalloHd\">")... )
                 result = append(result, blk.body... )
+                result = append(result, []byte("</div>")...)
             case BlkTopicEnd:
-                result = append(result, []byte("</Scallo>")... )
+                result = append(result, []byte("</div>")... )
             case BlkQuote:
                 result = append(result, []byte("<div class=\"quoteinside\"><div class=\"quotebegin\">&#8220;</div>")... )
                 result = append(result, blk.body... )

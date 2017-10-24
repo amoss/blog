@@ -8,7 +8,7 @@ used by parser
 
 The parser is written from scratch based on the .rst specification
 located `here <docutils.sourceforge.net/docs/ref/rst/restructuredtext.html>`_.
-My interpretation is that the document is re-conned from the parser
+My interpretation is that the document is retconned from the parser
 implementation in docutils. There does not appear to be a formal
 specification, so I would expect divergences in behaviour from
 docutils.
