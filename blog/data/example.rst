@@ -6,11 +6,11 @@ used by parser
 :Date:   October, 2017
 :Style:  Page
 
-The parser is written from scratch based on the .rst specification
-located `here <docutils.sourceforge.net/docs/ref/rst/restructuredtext.html>`_.
+The parser is written *from scratch* based on the .rst specification
+located `here <http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html>`_.
 My interpretation is that the document is retconned from the parser
-implementation in docutils. There does not appear to be a formal
-specification, so I would expect divergences in behaviour from
+implementation in docutils. There does not appear to be a **formal
+specification**, so I would expect divergences in behaviour from
 docutils.
 
 Restructuredtext is a general description language for documents. The

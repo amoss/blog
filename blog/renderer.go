@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "regexp"
 )
 
 func makePageHeader(extra string) []byte {
@@ -28,6 +29,22 @@ var pageFooter = []byte(`
 </html>
 `)
 
+func inlineStyles(input []byte) []byte {
+  links  := regexp.MustCompile("`([^`]+) <([^>]+)>`_")
+  input   = links.ReplaceAll(input, []byte("<a href=\"$2\">$1</a>"))
+  strong := regexp.MustCompile("\\*\\*([^*]+)\\*\\*")
+  input   = strong.ReplaceAll(input, []byte("<b>$1</b>"))
+  emp    := regexp.MustCompile("\\*([^*]+)\\*")
+  input   = emp.ReplaceAll(input, []byte("<i>$1</i>"))
+  shell  := regexp.MustCompile(":shell:`([^`]+)`")
+  input   = shell.ReplaceAll(input, []byte("<span class=\"shell\">$1</span>"))
+  code   := regexp.MustCompile(":code:`([^`]+)`")
+  input   = code.ReplaceAll(input, []byte("<span class=\"code\">$1</span>"))
+  math   := regexp.MustCompile(":math:`([^`]+)`")
+  input   = math.ReplaceAll(input, []byte("\\($1\\)"))
+  return input
+}
+
 var tagNames = map[BlockE]string {
     BlkBulleted: "ul",
     BlkNumbered: "ol",
@@ -50,17 +67,17 @@ func renderHtml(input chan Block) []byte {
         switch blk.kind {
             case BlkParagraph:
                 result = append(result, []byte("<p>")... )
-                result = append(result, blk.body... )
+                result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</p>")... )
             case BlkNumbered, BlkBulleted:
                 result = append(result, []byte("<li>")... )
-                result = append(result, blk.body... )
+                result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</li>")... )
             case BlkBigHeading:     // Assume this is first in stream
                 result = append(result, makePageHeader(string(blk.style))...)
                 result = append(result, []byte("<div style=\"width:100%; background-color:#dddddd; padding:1rem\">")... )
                 result = append(result, []byte("<h1>")... )
-                result = append(result, blk.title... )
+                result = append(result, inlineStyles(blk.title)... )
                 result = append(result, []byte("</h1>")... )
                 result = append(result, []byte("<i>")... )
                 result = append(result, blk.author... )
@@ -71,29 +88,29 @@ func renderHtml(input chan Block) []byte {
                 result = append(result, []byte("</div>")... )
             case BlkMediumHeading:
                 result = append(result, []byte("<h2>")... )
-                result = append(result, blk.body... )
+                result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</h2>")... )
             case BlkSmallHeading:
                 result = append(result, []byte("<h3>")... )
-                result = append(result, blk.body... )
+                result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</h3>")... )
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
-                result = append(result, blk.body... )
+                result = append(result, blk.body... )   // No inline - literal
                 result = append(result, []byte("</div>")... )
             case BlkCode:
                 result = append(result, []byte("<div class=\"code\">")... )
-                result = append(result, blk.body... )
+                result = append(result, blk.body... )   // No inline - literal
                 result = append(result, []byte("</div>")... )
             case BlkTopicBegin:
                 result = append(result, []byte("<div class=\"Scallo\"><div class=\"ScalloHd\">")... )
-                result = append(result, blk.body... )
+                result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</div>")...)
             case BlkTopicEnd:
                 result = append(result, []byte("</div>")... )
             case BlkQuote:
                 result = append(result, []byte("<div class=\"quoteinside\"><div class=\"quotebegin\">&#8220;</div>")... )
-                result = append(result, blk.body... )
+                result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte(" - ")... )
                 result = append(result, blk.author... )
                 result = append(result, []byte("<div class=\"quoteend\">&#8221;</div></div>\n")... )
@@ -128,7 +145,7 @@ func renderHtml(input chan Block) []byte {
                 result = append(result, []byte("<dt>")...)
                 result = append(result, blk.heading... )
                 result = append(result, []byte("</dt><dd>")...)
-                result = append(result, blk.body... )
+                result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</dd>\n")...)
             default:
                 fmt.Println("Block:", blk)
