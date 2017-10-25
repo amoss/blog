@@ -18,6 +18,9 @@ func makePageHeader(extra string) []byte {
         result = append(result, []byte(extra)...)
         result = append(result, []byte(".css\" type=\"text/css\" rel=\"stylesheet\"></link>\n")...)
     }
+    if extra=="slides" {
+        result = append(result, []byte("<script src=\"slides.js\" type=\"text/javascript\"></script>")...)
+    }
     result = append(result, []byte(`</head>
 <body>
 `)...)

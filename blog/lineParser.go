@@ -1,6 +1,7 @@
 package main
 
 import (
+    "runtime/debug"
     "bytes"
     "strings"
     "fmt"
@@ -344,6 +345,11 @@ func parse(input chan LineClass) chan Block {
     state.output = make(chan Block)
     go func() {
         defer close(state.output)
+        defer func(){
+            if r:= recover(); r!=nil {
+                fmt.Printf("Panic during parse! %s %s\n", r, debug.Stack() )
+            }
+        }()
         for stateFn := ParseSt_Init; stateFn != nil; {
             stateFn = stateFn(state)
         }

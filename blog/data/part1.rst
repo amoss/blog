@@ -499,7 +499,7 @@ State
 
 * What is the state of the system?
 
-.. epigraph:: 
+.. quote:: 
 
   The particular condition that something is in at a specific time.
 

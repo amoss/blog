@@ -448,7 +448,8 @@ func handler(out http.ResponseWriter, req *http.Request) {
     switch req.URL.Path {
         case "/page.css", "/styles.css", "/book-icon.png",
              "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
-             "/SourceSansPro-Regular.otf":
+             "/SourceSansPro-Regular.otf", "/slides.css",
+             "/slides.js":
             cnt,_ := ioutil.ReadFile("data" + req.URL.Path)
             out.Write(cnt)
         default:
