@@ -1,0 +1,33 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="32"
+   height="32"
+   id="svg2">
+  <g
+     transform="translate(0,-1020.3622)"
+     id="layer1">
+    <g
+       transform="matrix(-1,0,0,1,33.136376,2.1465742)"
+       id="g5219"
+       style="fill:#305d7a;fill-opacity:1;stroke:#305d7a;stroke-opacity:1">
+      <path
+         d="m 12.053145,1046.3132 -6.446088,-23.4166 23.416654,6.446 -11.491498,5.4791 z"
+         id="path2985"
+         style="fill:#305d7a;fill-opacity:1;stroke:#305d7a;stroke-width:3;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    </g>
+    <g
+       transform="matrix(0.57501547,0,0,0.66493636,33.703683,345.44339)"
+       id="g5302"
+       style="stroke:#ffffff;stroke-width:2.00050616;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
+      <path
+         d="m -29.215727,1026.1096 13.912669,12.0313"
+         id="path5298"
+         style="fill:none;stroke:#ffffff;stroke-width:2.00050616;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <path
+         d="m -29.215727,1038.1409 13.912669,-12.0313"
+         id="path5300"
+         style="fill:none;stroke:#ffffff;stroke-width:2.00050616;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    </g>
+  </g>
+</svg>

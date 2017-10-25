@@ -7,6 +7,7 @@ import (
       "io/ioutil"
       "errors"
       "os"
+      "path"
       //"strings"
       //"regexp"
 )
@@ -449,8 +450,12 @@ func handler(out http.ResponseWriter, req *http.Request) {
         case "/page.css", "/styles.css", "/book-icon.png",
              "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
              "/SourceSansPro-Regular.otf", "/slides.css",
-             "/slides.js":
+             "/slides.js", "/logo.svg", "/leftarrow.svg",
+             "/rightarrow.svg", "/closearrow.svg", "/settings.svg":
             cnt,_ := ioutil.ReadFile("data" + req.URL.Path)
+            switch path.Ext(req.URL.Path) {
+                case ".svg": out.Header().Set("Content-type", "image/svg+xml")
+            }
             out.Write(cnt)
         default:
             filename := "data" + req.URL.Path + ".rst"

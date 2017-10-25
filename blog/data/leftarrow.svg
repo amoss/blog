@@ -1,0 +1,20 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="32"
+   height="32"
+   id="svg2">
+  <g
+     transform="translate(0,-1020.3622)"
+     id="layer1">
+    <g
+       transform="matrix(-1,0,0,1,31.116071,0)"
+       id="g5219">
+      <path
+         d="M 5,4 26.116071,16 5,28 9.2513592,16 z"
+         transform="translate(0,1020.3622)"
+         id="path2985"
+         style="fill:none;stroke:#305d7a;stroke-width:3;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    </g>
+  </g>
+</svg>
