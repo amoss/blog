@@ -1,6 +1,7 @@
 package main
 
 import (
+    "runtime/debug"
       "net/http"
       "fmt"
       "io/ioutil"
@@ -439,6 +440,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
     defer func() {
         r:= recover()
         if r!=nil {
+            fmt.Printf("Panic during page handler! %s %s\n", r, debug.Stack() )
             http.Error(out, errors.New("Something went wrong :(").Error(),
                        http.StatusInternalServerError)
         }

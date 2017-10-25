@@ -5,7 +5,6 @@ import (
     "strings"
     "fmt"
     "runtime"
-    "runtime/debug"
 )
 var lineParserDbg = false
 var lineParserStDbg = false
@@ -179,7 +178,6 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             }
             st.next()
             st.indent = st.cur.indent
-            fmt.Println("Scanning literal with indent of",st.indent)
             st.body   = make( []byte, 0, 1024)
             for st.cur.indent>=st.indent  ||  st.cur.kind==Blank {
                 if len(st.body)>0 { st.body = append(st.body, byte('\n')) }
@@ -344,12 +342,8 @@ func parse(input chan LineClass) chan Block {
     state.indent = -1
     state.topicIndent = -1
     state.output = make(chan Block)
-    defer func() {
-      close(state.output)
-      r := recover()
-      fmt.Printf("Parser panic! %s %s\n", r, debug.Stack() )
-    }()
     go func() {
+        defer close(state.output)
         for stateFn := ParseSt_Init; stateFn != nil; {
             stateFn = stateFn(state)
         }
