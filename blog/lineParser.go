@@ -68,8 +68,14 @@ func dbg(st *ParseSt) {
     pc,_,_,_ := runtime.Caller(1)
     callingName := runtime.FuncForPC(pc).Name()
     if lineParserStDbg {
-        fmt.Printf("LineParser: %s %s %s\n", callingName, st, st.cur)
+        fmt.Printf("%29s: %s %s %s\n", "parser", callingName, st, st.cur)
     }
+}
+
+func dbgForce(st *ParseSt) {
+    pc,_,_,_ := runtime.Caller(1)
+    callingName := runtime.FuncForPC(pc).Name()
+    fmt.Printf("%29s: %s %s %s\n", "parser", callingName, st, st.cur)
 }
 
 func ParseSt_Init(st *ParseSt) StateFn {
@@ -301,6 +307,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
             st.indent = -1
             return ParseSt_Init
         default:
+            dbgForce(st)
             panic("Can't end a paragraph with "+string(st.cur.kind))
     }
 }
