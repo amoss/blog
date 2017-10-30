@@ -43,11 +43,11 @@ func handler(out http.ResponseWriter, req *http.Request) {
             // Video and images not available...
             lines  := LineScanner(filename)
             if lines!=nil {
-                fmt.Printf("%29s: Path default - served from", "handler", filename)
+                fmt.Printf("%29s: Path default - served from\n", "handler", filename)
                 blocks := parse(*lines)
                 out.Write( renderHtml(blocks) )
             } else {
-              fmt.Printf("%29s: File not found!", "handler", filename)
+              fmt.Printf("%29s: File not found!\n", "handler", filename)
             }
     }
 }
