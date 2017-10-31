@@ -60,20 +60,30 @@ func handler(out http.ResponseWriter, req *http.Request) {
                             out.Write( []byte("File not found") )
                             return
                         }
-                    }
-                    // Including a leading slash
-                    basename := req.URL.Path[:len(req.URL.Path)-5]
-                    filename := "data" + basename + ".rst"
-                    // PANIC in trace comes from lack of error checking
-                    // Video and images not available...
-                    lines  := LineScanner(filename)
-                    if lines!=nil {
-                        fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
-                        blocks := parse(*lines)
-                        out.Write( renderHtml(blocks) )
-                    } else {
-                      fmt.Printf("%29s: File not found! %s\n", "handler", filename)
-                    }
+                        if insideFI!=nil && outsideFI!=nil {
+                            out.WriteHeader(404)
+                            fmt.Printf("%29s: Ambiguous! Can resolve %s AND %s\n",
+                                       "handler", inside, outside)
+                            out.Write( []byte("File not found (ambiguous configuration)") )
+                            return
+                        }
+                        if insideFI!=nil {
+                            filename := inside
+                        } else {
+                            filename := outside
+                        }
+                        lines  := LineScanner(filename)
+                        if lines!=nil {
+                            fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
+                            blocks := parse(*lines)
+                            out.Write( renderHtml(blocks) )
+                            return
+                        } else {
+                            fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)
+                            out.WriteHeader(404)
+                            out.Write( []byte("File not found") )
+                            return
+                        }
                     }
                     if path.Ext(req.URL.Path)==".jpg" {
                         fmt.Printf("-----> Check file-ext on\n",req.URL.Path)
