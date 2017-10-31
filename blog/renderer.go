@@ -131,7 +131,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(".mov\" type=\"video/quicktime;\">")...)
                 result = append(result, []byte("</video>")...)
             case BlkReference:
-                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"book-icon.png\"/></td>\n<td><a href=\"")...)
+                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"/book-icon.png\"/></td>\n<td><a href=\"")...)
                 result = append(result, blk.url... )
                 result = append(result, []byte("\">")...)
                 result = append(result, blk.title... )
