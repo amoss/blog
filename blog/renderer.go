@@ -161,6 +161,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
 
 
 func renderHtmlSlides(headBlock Block, input chan Block) []byte {
+    counter := 1
     result := make([]byte, 0, 16384)
     result = append(result, makePageHeader(string(headBlock.style))...)
     result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
@@ -201,6 +202,9 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("</li>")... )
             case BlkSmallHeading, BlkMediumHeading:
                 result = append(result, []byte(`</div></div><div class="S169"><div class="Stitle169"><h1>`)... )
+                pageNum := string(counter) + ". "
+                counter++
+                result = append(result, []byte(pageNum)... )
                 result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte(`</h1></div><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)... )
             case BlkShell:
