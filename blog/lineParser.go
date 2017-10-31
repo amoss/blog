@@ -186,7 +186,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
                 switch string( bytes.ToLower(st.cur.marker) ) {
                     case "position":
                         position = bytes.ToLower(st.cur.body)
-                        st.cur.next()
+                        st.next()
                     default:
                         panic("Unknown position attribute "+string(st.cur.marker))
                 }

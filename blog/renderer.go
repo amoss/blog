@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "regexp"
+    "bytes"
 )
 
 func makePageHeader(extra string) []byte {
