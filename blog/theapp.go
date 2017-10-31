@@ -43,6 +43,19 @@ func handler(out http.ResponseWriter, req *http.Request) {
             }
             switch( path.Ext(req.URL.Path) ) {
                 case ".jpg":
+                    filename := "data" + req.URL.Path
+                    cnt,err := ioutil.ReadFile(target)
+                    if err!=nil && os.IsNotExist(err) {
+                        out.WriteHeader(404)
+                        fmt.Printf("%29s: Missing image %s\n",
+                                   "handler", filename)
+                        out.Write( []byte("File not found") )
+                    }
+                    else
+                    {
+                        out.Header().Set("Content-type", "image/jpg")
+                        out.Write(cnt)
+                    }
                 case ".html":
                     if strings.HasSuffix(req.URL.Path,"index.html") {
                         dir := path.Dir(req.URL.Path)
