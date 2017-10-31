@@ -238,22 +238,22 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 if layout!="single" &&
                    bytes.Compare(blk.position,[]byte("highlight"))==0 {
                     other = append(other, []byte("<div class=\"shell\">")... )
-                    other = append(other, blk.body... )   // No inline - literal
+                    other = append(other, []byte(html.EscapeString(string(blk.body)))... )
                     other = append(other, []byte("</div>")... )
                 } else {
                     result = append(result, []byte("<div class=\"shell\">")... )
-                    result = append(result, blk.body... )   // No inline - literal
+                    result = append(result, []byte(html.EscapeString(string(blk.body)))... )
                     result = append(result, []byte("</div>")... )
                 }
             case BlkCode:
                 if layout!="single" &&
                    bytes.Compare(blk.position,[]byte("highlight"))==0 {
                     other = append(other, []byte("<div class=\"code\">")... )
-                    other = append(other, blk.body... )   // No inline - literal
+                    other = append(other, []byte(html.EscapeString(string(blk.body)))... )
                     other = append(other, []byte("</div>")... )
                 } else {
                     result = append(result, []byte("<div class=\"code\">")... )
-                    result = append(result, blk.body... )   // No inline - literal
+                    result = append(result, []byte(html.EscapeString(string(blk.body)))... )
                     result = append(result, []byte("</div>")... )
                 }
             case BlkTopicBegin:
