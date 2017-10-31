@@ -50,9 +50,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
                         fmt.Printf("%29s: Missing image %s\n",
                                    "handler", filename)
                         out.Write( []byte("File not found") )
-                    }
-                    else
-                    {
+                    } else {
                         out.Header().Set("Content-type", "image/jpg")
                         out.Write(cnt)
                     }
