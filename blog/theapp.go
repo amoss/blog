@@ -53,7 +53,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
                         fmt.Printf("%s: %s, %s\n", inside, insideFI, insideErr)
                         outsideFI, outsideErr := os.Stat(outside)
                         fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
-                        if insideFI && outsideFI {
+                        if insideFI==nil && outsideFI==nil {
                             out.WriteHeader(404)
                             fmt.Printf("%29s: Can't resolve %s or %s\n",
                                        "handler", inside, outside)
