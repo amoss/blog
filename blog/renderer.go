@@ -207,11 +207,11 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                     case "rows":
                         result = append(result, []byte("</div><div style=\"width:100%; height:49%; display:inline-block\">") )
                         result = append(result, other...)
-                        result = append(result, []byte("</div>")
+                        result = append(result, []byte("</div>")...)
                     case "cols":
                         result = append(result, []byte("</div><div style=\"width:49%;height:100%;display:inline-block;margin-left:1%\">") )
                         result = append(result, other...)
-                        result = append(result, []byte("</div>")
+                        result = append(result, []byte("</div>")...)
                 }
                 result = append(result, []byte(`</div></div><div class="S169"><div class="Stitle169"><h1>`)... )
                 pageNum := fmt.Sprintf("%d. ",counter)
