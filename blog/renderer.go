@@ -118,8 +118,10 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
             case BlkQuote:
                 result = append(result, []byte("<div class=\"quoteinside\"><div class=\"quotebegin\">&#8220;</div>")... )
                 result = append(result, inlineStyles(blk.body)... )
-                result = append(result, []byte("<br/>--- ")... )
-                result = append(result, blk.author... )
+                if len(blk.author)>0 {
+                    result = append(result, []byte("<br/>--- ")... )
+                    result = append(result, blk.author... )
+                }
                 result = append(result, []byte("<div class=\"quoteend\">&#8221;</div></div>\n")... )
             case BlkImage:
                 result = append(result, []byte("<img src=\"")...)
@@ -265,8 +267,10 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
             case BlkQuote:
                 result = append(result, []byte("<div class=\"quoteinside\"><div class=\"quotebegin\">&#8220;</div>")... )
                 result = append(result, inlineStyles(blk.body)... )
-                result = append(result, []byte("<br/>--- ")... )
-                result = append(result, blk.author... )
+                if len(blk.author)>0 {
+                    result = append(result, []byte("<br/>--- ")... )
+                    result = append(result, blk.author... )
+                }
                 result = append(result, []byte("<div class=\"quoteend\">&#8221;</div></div>\n")... )
             case BlkImage:
                 if layout=="single" {
