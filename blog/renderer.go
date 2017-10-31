@@ -4,6 +4,7 @@ import (
     "fmt"
     "regexp"
     "bytes"
+    "html"
 )
 
 func makePageHeader(extra string) []byte {
@@ -100,11 +101,11 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("</h2>")... )
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
-                result = append(result, blk.body... )   // No inline - literal
+                result = append(result, []byte(html.EscapeString(string(blk.body)))... )
                 result = append(result, []byte("</div>")... )
             case BlkCode:
                 result = append(result, []byte("<div class=\"code\">")... )
-                result = append(result, blk.body... )   // No inline - literal
+                result = append(result, []byte(html.EscapeString(string(blk.body)))... )
                 result = append(result, []byte("</div>")... )
             case BlkTopicBegin:
                 result = append(result, []byte("<div class=\"Scallo\"><div class=\"ScalloHd\">")... )
