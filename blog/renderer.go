@@ -225,10 +225,10 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                     case "single":
                     case "rows":
                         other = make([]byte, 0, 16384)
-                        result = append(result, []byte("<div style=\"width:100%; height:49%; display:inline-block\">") )
+                        result = append(result, []byte("<div style=\"width:100%; height:49%; display:inline-block\">")... )
                     case "cols":
                         other = make([]byte, 0, 16384)
-                        result = append(result, []byte("<div style=\"width:49%;height:100%;display:inline-block;vertical-align:top\">") )
+                        result = append(result, []byte("<div style=\"width:49%;height:100%;display:inline-block;vertical-align:top\">")... )
                 }
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
