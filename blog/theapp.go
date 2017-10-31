@@ -25,8 +25,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
         }
     }()
     switch req.URL.Path {
-        case "/page.css", "/styles.css", "/slides.css",
-             "/book-icon.png",
+        case "/page.css", "/styles.css", "/book-icon.png",
              "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
              "/SourceSansPro-Regular.otf", "/slides.css",
              "/slides.js", "/logo.svg", "/leftarrow.svg",
