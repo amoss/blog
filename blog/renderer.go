@@ -251,9 +251,15 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, blk.author... )
                 result = append(result, []byte("<div class=\"quoteend\">&#8221;</div></div>\n")... )
             case BlkImage:
-                result = append(result, []byte("<img src=\"")...)
-                result = append(result, blk.body... )
-                result = append(result, []byte("\" />")...)
+                if layout=="single" {
+                    result = append(result, []byte("<img src=\"")...)
+                    result = append(result, blk.body... )
+                    result = append(result, []byte("\" />")...)
+                } else {
+                    other = append(other, []byte("<img src=\"")...)
+                    other = append(other, blk.body... )
+                    other = append(other, []byte("\" />")...)
+                }
             case BlkVideo:
                 result = append(result, []byte("<video width=\"100%%\" style=\"max-width:100%% max-height:95%%\" controls>\n")... )
                 result = append(result, []byte("<source src=\"")... )
