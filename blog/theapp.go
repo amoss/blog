@@ -57,7 +57,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
                             out.WriteHeader(404)
                             fmt.Printf("%29s: Can't resolve %s or %s\n",
                                        "handler", inside, outside)
-                            out.Write( "File not found" )
+                            out.Write( []byte("File not found") )
                             return
                         }
                     }
