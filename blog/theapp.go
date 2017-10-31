@@ -49,8 +49,10 @@ func handler(out http.ResponseWriter, req *http.Request) {
                         fmt.Printf("Index detected %s <- %s\n",dir,req.URL.Path)
                         inside  := "data" + dir + "/index.rst"
                         outside := "data" + dir + ".rst"
-                        fmt.Printf("%s: %s\n", inside, os.Stat(inside))
-                        fmt.Printf("%s: %s\n", outside, os.Stat(outside))
+                        insideFI, insideErr := os.Stat(inside)
+                        fmt.Printf("%s: %s, %s\n", inside, insideFI, insideErr)
+                        outsideFI, outsideErr := os.Stat(outside)
+                        fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
                     }
                     // Including a leading slash
                     basename := req.URL.Path[:len(req.URL.Path)-5]
