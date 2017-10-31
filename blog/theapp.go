@@ -39,7 +39,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
             out.Write(cnt)
         default:
             if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
-                http.Redirect(out,req,req.URL.Path+"index.html")
+                http.Redirect(out,req,req.URL.Path+"index.html",302)
             }
             switch( path.Ext(req.URL.Path) ) {
                 case ".jpg":
