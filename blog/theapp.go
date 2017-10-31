@@ -53,6 +53,13 @@ func handler(out http.ResponseWriter, req *http.Request) {
                         fmt.Printf("%s: %s, %s\n", inside, insideFI, insideErr)
                         outsideFI, outsideErr := os.Stat(outside)
                         fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
+                        if insideFI && outsideFI {
+                            out.WriteHeader(404)
+                            fmt.Printf("%29s: Can't resolve %s or %s\n",
+                                       "handler", inside, outside)
+                            out.Write( "File not found" )
+                            return
+                        }
                     }
                     // Including a leading slash
                     basename := req.URL.Path[:len(req.URL.Path)-5]
