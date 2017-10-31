@@ -38,19 +38,32 @@ func handler(out http.ResponseWriter, req *http.Request) {
             }
             out.Write(cnt)
         default:
-            if path.Ext(req.URL.Path)==".jpg" {
-                fmt.Printf("-----> Check file-ext on\n",req.URL.Path)
+            if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
+                http.Redirect(out,req,req.URL.Path+"index.html")
             }
-            filename := "data" + req.URL.Path + ".rst"
-            // PANIC in trace comes from lack of error checking
-            // Video and images not available...
-            lines  := LineScanner(filename)
-            if lines!=nil {
-                fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
-                blocks := parse(*lines)
-                out.Write( renderHtml(blocks) )
-            } else {
-              fmt.Printf("%29s: File not found! %s\n", "handler", filename)
+            switch( path.Ext(req.URL.Path) ) {
+                case ".jpg":
+                case ".html":
+                    if strings.HasSuffix(req.URL.Path,"index.html") {
+                        dir := path.Dir(req.URL.Path)
+                        fmt.Printf("Index detected %s <- %s\n",dir,req.URL.Path)
+                    }
+                    // Including a leading slash
+                    basename := req.URL.Path[:len(req.URL.Path)-5]
+                    filename := "data" + basename + ".rst"
+                    // PANIC in trace comes from lack of error checking
+                    // Video and images not available...
+                    lines  := LineScanner(filename)
+                    if lines!=nil {
+                        fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
+                        blocks := parse(*lines)
+                        out.Write( renderHtml(blocks) )
+                    } else {
+                      fmt.Printf("%29s: File not found! %s\n", "handler", filename)
+                    }
+                    }
+                    if path.Ext(req.URL.Path)==".jpg" {
+                        fmt.Printf("-----> Check file-ext on\n",req.URL.Path)
             }
     }
 }
