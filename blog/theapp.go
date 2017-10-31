@@ -47,6 +47,10 @@ func handler(out http.ResponseWriter, req *http.Request) {
                     if strings.HasSuffix(req.URL.Path,"index.html") {
                         dir := path.Dir(req.URL.Path)
                         fmt.Printf("Index detected %s <- %s\n",dir,req.URL.Path)
+                        inside  := "data" + dir + "/index.rst"
+                        outside := "data" + dir + ".rst"
+                        fmt.Printf("%s: %s\n", inside, os.Stat(inside))
+                        fmt.Printf("%s: %s\n", outside, os.Stat(outside))
                     }
                     // Including a leading slash
                     basename := req.URL.Path[:len(req.URL.Path)-5]
