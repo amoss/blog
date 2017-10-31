@@ -44,7 +44,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
             switch( path.Ext(req.URL.Path) ) {
                 case ".jpg":
                     filename := "data" + req.URL.Path
-                    cnt,err := ioutil.ReadFile(target)
+                    cnt,err := ioutil.ReadFile(filename)
                     if err!=nil && os.IsNotExist(err) {
                         out.WriteHeader(404)
                         fmt.Printf("%29s: Missing image %s\n",
