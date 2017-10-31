@@ -67,10 +67,11 @@ func handler(out http.ResponseWriter, req *http.Request) {
                             out.Write( []byte("File not found (ambiguous configuration)") )
                             return
                         }
+                        var filename string
                         if insideFI!=nil {
-                            filename := inside
+                            filename = inside
                         } else {
-                            filename := outside
+                            filename = outside
                         }
                         lines  := LineScanner(filename)
                         if lines!=nil {
