@@ -31,15 +31,15 @@ func handler(out http.ResponseWriter, req *http.Request) {
              "/slides.js", "/logo.svg", "/leftarrow.svg",
              "/rightarrow.svg", "/closearrow.svg", "/settings.svg":
             target := "data" + req.URL.Path
-            fmt.Printf("%29s: Path whitelisted - served from", "handler", target)
+            fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
             cnt,_ := ioutil.ReadFile(target)
             switch path.Ext(req.URL.Path) {
                 case ".svg": out.Header().Set("Content-type", "image/svg+xml")
             }
             out.Write(cnt)
         default:
-            if len(req.URL.Path)>4 {
-                fmt.Printf("Check file-ext on",req.URL.Path)
+            if path.Ext(req.URL.Path)==".jpg" {
+                fmt.Printf("-----> Check file-ext on\n",req.URL.Path)
             }
             filename := "data" + req.URL.Path + ".rst"
             // PANIC in trace comes from lack of error checking
