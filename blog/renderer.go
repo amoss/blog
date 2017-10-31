@@ -163,7 +163,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
 func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     result := make([]byte, 0, 16384)
     result = append(result, makePageHeader(string(headBlock.style))...)
-    result = append(result, []byte(`<div id="navpanel"><a><img src="leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="../rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="../settings.svg" class="settings"></img></a>`)...)
+    result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
     result = append(result, []byte(`<div id="slides">`)...)
     // Title slide
     result = append(result, []byte(`<div class="S169"><div class="Sin169">`)...)
@@ -202,7 +202,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
             case BlkSmallHeading, BlkMediumHeading:
                 result = append(result, []byte(`</div></div><div class="S169"><div class="Stitle169"><h1>`)... )
                 result = append(result, inlineStyles(blk.body)... )
-                result = append(result, []byte(`</h1></div><div class="Slogo"><img src="logo.svg"/></div><div class="Sin169">`)... )
+                result = append(result, []byte(`</h1></div><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)... )
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
                 result = append(result, blk.body... )   // No inline - literal
@@ -237,7 +237,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(".mov\" type=\"video/quicktime;\">")...)
                 result = append(result, []byte("</video>")...)
             case BlkReference:
-                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"book-icon.png\"/></td>\n<td><a href=\"")...)
+                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"/book-icon.png\"/></td>\n<td><a href=\"")...)
                 result = append(result, blk.url... )
                 result = append(result, []byte("\">")...)
                 result = append(result, blk.title... )
