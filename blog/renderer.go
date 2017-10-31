@@ -231,13 +231,27 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                         result = append(result, []byte("<div style=\"width:49%;height:100%;display:inline-block;vertical-align:top\">")... )
                 }
             case BlkShell:
-                result = append(result, []byte("<div class=\"shell\">")... )
-                result = append(result, blk.body... )   // No inline - literal
-                result = append(result, []byte("</div>")... )
+                if layout!="single" &&
+                   bytes.Compare(blk.position,[]byte("highlight"))==0 {
+                    other = append(other, []byte("<div class=\"shell\">")... )
+                    other = append(other, blk.body... )   // No inline - literal
+                    other = append(other, []byte("</div>")... )
+                } else {
+                    result = append(result, []byte("<div class=\"shell\">")... )
+                    result = append(result, blk.body... )   // No inline - literal
+                    result = append(result, []byte("</div>")... )
+                }
             case BlkCode:
-                result = append(result, []byte("<div class=\"code\">")... )
-                result = append(result, blk.body... )   // No inline - literal
-                result = append(result, []byte("</div>")... )
+                if layout!="single" &&
+                   bytes.Compare(blk.position,[]byte("highlight"))==0 {
+                    other = append(other, []byte("<div class=\"code\">")... )
+                    other = append(other, blk.body... )   // No inline - literal
+                    other = append(other, []byte("</div>")... )
+                } else {
+                    result = append(result, []byte("<div class=\"code\">")... )
+                    result = append(result, blk.body... )   // No inline - literal
+                    result = append(result, []byte("</div>")... )
+                }
             case BlkTopicBegin:
                 result = append(result, []byte("<div class=\"Scallo\"><div class=\"ScalloHd\">")... )
                 result = append(result, inlineStyles(blk.body)... )

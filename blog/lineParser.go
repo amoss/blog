@@ -33,15 +33,16 @@ const (
     BlkReference
 )
 type Block struct {
-    kind    BlockE
-    body    []byte
-    author  []byte
-    title   []byte
-    url     []byte
-    heading []byte
-    date    []byte
-    style   []byte
-    detail  []byte
+    kind     BlockE
+    body     []byte
+    author   []byte
+    title    []byte
+    url      []byte
+    heading  []byte
+    date     []byte
+    style    []byte
+    detail   []byte
+    position []byte
 }
 
 type ParseSt struct {
@@ -180,6 +181,16 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             st.output <- Block{kind:BlkVideo,body:st.body}
             return ParseSt_Init
         case "shell","code":
+            position := []byte("default")
+            if st.cur.kind==Attribute {
+                switch string( bytes.ToLower(st.cur.marker) ) {
+                    case "position":
+                        position = bytes.ToLower(st.cur.body)
+                        st.cur.next()
+                    default:
+                        panic("Unknown position attribute "+string(st.cur.marker))
+                }
+            }
             if st.cur.kind!=Blank {
                 panic("Must put shell lit in separate block")
             }
@@ -200,9 +211,9 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             // Missing terminating blank will not be detected - is it worth it?
             switch string(dirName) {
                 case "shell":
-                    st.output <- Block{kind:BlkShell,body:st.body}
+                    st.output <- Block{kind:BlkShell,body:st.body,position:position}
                 case "code":
-                    st.output <- Block{kind:BlkCode,body:st.body}
+                    st.output <- Block{kind:BlkCode,body:st.body,position:position}
             }
             st.indent = -1
             return ParseSt_Init
