@@ -1,11 +1,11 @@
 .quoteinside {
-    font-size:0.75em;
-    line-height: 36px;
+    font-size: 28px;
+    line-height: 32px;
 }
 .quotebegin {
-    line-height: 36px;
+    line-height: 32px;
 }
 .quoteend {
     left: 0em;
-    line-height: 36px;
+    line-height: 32px;
 }
