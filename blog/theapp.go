@@ -51,7 +51,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
                                    "handler", filename)
                         out.Write( []byte("File not found") )
                     } else {
-                        out.Header().Set("Content-type", "image/jpg")
+                        out.Header().Set("Content-type", "image/jpeg")
                         out.Write(cnt)
                     }
                 case ".html":
