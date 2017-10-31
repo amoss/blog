@@ -87,6 +87,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
                     }
                     if path.Ext(req.URL.Path)==".jpg" {
                         fmt.Printf("-----> Check file-ext on\n",req.URL.Path)
+                    }
             }
     }
 }
