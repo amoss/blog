@@ -104,8 +104,10 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(html.EscapeString(string(blk.body)))... )
                 result = append(result, []byte("</div>")... )
             case BlkCode:
+                escaped := html.EscapeString(string(blk.body))
+                fmt.Println(escaped)
                 result = append(result, []byte("<div class=\"code\">")... )
-                result = append(result, []byte(html.EscapeString(string(blk.body)))... )
+                result = append(result, []byte(escaped)... )
                 result = append(result, []byte("</div>")... )
             case BlkTopicBegin:
                 result = append(result, []byte("<div class=\"Scallo\"><div class=\"ScalloHd\">")... )
