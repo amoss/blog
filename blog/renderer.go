@@ -256,7 +256,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                     result = append(result, blk.body... )
                     result = append(result, []byte("\" />")...)
                 } else {
-                    other = append(other, []byte("<img src=\"")...)
+                    other = append(other, []byte("<img width=\"100%%\" src=\"")...)
                     other = append(other, blk.body... )
                     other = append(other, []byte("\" />")...)
                 }
