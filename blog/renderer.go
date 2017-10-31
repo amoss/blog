@@ -202,8 +202,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("</li>")... )
             case BlkSmallHeading, BlkMediumHeading:
                 result = append(result, []byte(`</div></div><div class="S169"><div class="Stitle169"><h1>`)... )
-                var pageNum string
-                fmt.Sprintf(pageNum,"%d. ",counter)
+                pageNum := fmt.Sprintf("%d. ",counter)
                 counter++
                 result = append(result, []byte(pageNum)... )
                 result = append(result, inlineStyles(blk.body)... )
