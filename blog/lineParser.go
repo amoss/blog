@@ -294,10 +294,10 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                 st.next()  // eat it
             } else {
                 st.next()  // eat it
-                layout := []byte("default")
+                layout := []byte("single")
                 for st.cur.kind==Attribute {
                     if strings.ToLower(string(st.cur.marker))=="layout" {
-                        layout = st.cur.body
+                        layout = bytes.ToLower(st.cur.body)
                     }
                     st.next()
                 }
@@ -311,11 +311,10 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                 st.next()  // eat it
             } else {
                 st.next()  // eat it
-                layout := []byte("default")
+                layout := []byte("single")
                 for st.cur.kind==Attribute {
-                    fmt.Println("Finding attribute")
                     if strings.ToLower(string(st.cur.marker))=="layout" {
-                        layout = st.cur.body
+                        layout = bytes.ToLower(st.cur.body)
                     }
                     st.next()
                 }

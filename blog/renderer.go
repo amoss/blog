@@ -162,6 +162,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
 
 func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     counter := 1
+    layout  := "single"
     result := make([]byte, 0, 16384)
     result = append(result, makePageHeader(string(headBlock.style))...)
     result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
@@ -201,13 +202,33 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</li>")... )
             case BlkSmallHeading, BlkMediumHeading:
+                switch layout {
+                    case "single":
+                    case "rows":
+                        result = append(result, []byte("</div><div style=\"width:100%; height:49%; display:inline-block\">") )
+                        result = append(result, other...)
+                        result = append(result, []byte("</div>")
+                    case "cols":
+                        result = append(result, []byte("</div><div style=\"width:49%;height:100%;display:inline-block;margin-left:1%\">") )
+                        result = append(result, other...)
+                        result = append(result, []byte("</div>")
+                }
                 result = append(result, []byte(`</div></div><div class="S169"><div class="Stitle169"><h1>`)... )
                 pageNum := fmt.Sprintf("%d. ",counter)
                 counter++
                 result = append(result, []byte(pageNum)... )
                 result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte(`</h1></div><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)... )
-                fmt.Println("Slide layout: ",string(blk.style))
+                layout = string(blk.style)
+                switch layout {
+                    case "single":
+                    case "rows":
+                        other := make([]byte, 0, 16384)
+                        result = append(result, []byte("<div style=\"width:100%; height:49%; display:inline-block\">") )
+                    case "cols":
+                        other := make([]byte, 0, 16384)
+                        result = append(result, []byte("<div style=\"width:49%;height:100%;display:inline-block;vertical-align:top\">") )
+                }
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
                 result = append(result, blk.body... )   // No inline - literal
