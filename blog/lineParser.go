@@ -296,7 +296,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                 st.next()  // eat it
                 layout := []byte("default")
                 for st.cur.kind==Attribute {
-                    if st.cur.marker=="layout" {
+                    if string(st.cur.marker)=="layout" {
                         layout = st.cur.body
                     }
                 }
@@ -312,7 +312,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                 st.next()  // eat it
                 layout := []byte("default")
                 for st.cur.kind==Attribute {
-                    if st.cur.marker=="layout" {
+                    if string(st.cur.marker)=="layout" {
                         layout = st.cur.body
                     }
                 }
