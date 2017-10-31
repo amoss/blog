@@ -299,6 +299,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                     if string(st.cur.marker)=="layout" {
                         layout = st.cur.body
                     }
+                    st.next()
                 }
                 st.output <- Block{kind:BlkMediumHeading,body:body,style:layout}
             }
@@ -315,6 +316,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                     if string(st.cur.marker)=="layout" {
                         layout = st.cur.body
                     }
+                    st.next()
                 }
                 st.output <- Block{kind:BlkMediumHeading,body:body,style:layout}
             }
