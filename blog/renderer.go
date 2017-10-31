@@ -207,6 +207,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(pageNum)... )
                 result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte(`</h1></div><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)... )
+                fmt.Println("Slide layout: ",blk.style)
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
                 result = append(result, blk.body... )   // No inline - literal

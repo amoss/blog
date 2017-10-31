@@ -291,19 +291,33 @@ func ParseSt_InPara(st *ParseSt) StateFn {
         case SectionHeading:
             if st.pos-first > 1 {
                 fmt.Println("Ambiguous para/section heading: use blank")
+                st.next()  // eat it
             } else {
-                st.output <- Block{kind:BlkMediumHeading,body:body}
+                st.next()  // eat it
+                layout := []byte("default")
+                for st.cur.kind==Attribute {
+                    if st.cur.marker=="layout" {
+                        layout = st.cur.body
+                    }
+                }
+                st.output <- Block{kind:BlkMediumHeading,body:body,style:layout}
             }
-            st.next()  // eat it
             st.indent = -1
             return ParseSt_Init
         case SubsectionHeading:
             if st.pos-first > 1 {
                 fmt.Println("Ambiguous para/section heading: use blank")
+                st.next()  // eat it
             } else {
-                st.output <- Block{kind:BlkSmallHeading,body:body}
+                st.next()  // eat it
+                layout := []byte("default")
+                for st.cur.kind==Attribute {
+                    if st.cur.marker=="layout" {
+                        layout = st.cur.body
+                    }
+                }
+                st.output <- Block{kind:BlkMediumHeading,body:body,style:layout}
             }
-            st.next()  // eat it
             st.indent = -1
             return ParseSt_Init
         default:
