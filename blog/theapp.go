@@ -38,6 +38,9 @@ func handler(out http.ResponseWriter, req *http.Request) {
             }
             out.Write(cnt)
         default:
+            if len(req.URL.Path)>4 {
+                fmt.Printf("Check file-ext on",req.URL.Path)
+            }
             filename := "data" + req.URL.Path + ".rst"
             // PANIC in trace comes from lack of error checking
             // Video and images not available...
