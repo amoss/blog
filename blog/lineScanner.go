@@ -19,6 +19,7 @@ const (
       TableSeparator
       TableRow
       Other
+      Comment
       EOF
 )
 type LineClass struct {
@@ -59,6 +60,12 @@ func classify(line []byte) LineClass {
     d := dir.FindSubmatch(text)
     if d!=nil {
         return LineClass{indent,d[0],text[len(d[0]):],Directive}
+    }
+    // Overlaps with directives, check if did not match
+    com := rexexp.MustCompile("^[.][.] ")
+    c := com.FindSubmatch(text)
+    if c!=nil {
+        return LineClass{indent,nil,text,Comment}
     }
     if bytes.Compare(text[0:2],[]byte("* "))==0 {
       return LineClass{indent, []byte("* "), text[2:], Bulleted}

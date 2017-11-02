@@ -130,6 +130,9 @@ func ParseSt_Init(st *ParseSt) StateFn {
             }
             st.next()
             return ParseSt_Table
+        case Comment:
+            st.next()
+            return ParseSt_Init
         default:
             panic("Don't know how to parse "+st.cur.String())
     }
