@@ -296,12 +296,12 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                     result = append(result, blk.body... )
                     result = append(result, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/>")...)
                 } else {
-                    other = append(other, []byte("<img width=\"100%%\" src=\"")...)
+                    other = append(other, []byte("<img width=\"100%\" src=\"")...)
                     other = append(other, blk.body... )
                     other = append(other, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/>")...)
                 }
             case BlkVideo:
-                result = append(result, []byte("<video width=\"100%%\" style=\"max-width:100%%; max-height:95%%\" controls>\n")... )
+                result = append(result, []byte("<video width=\"100%\" style=\"max-width:100%; max-height:95%\" controls>\n")... )
                 result = append(result, []byte("<source src=\"")... )
                 result = append(result, blk.body... )
                 result = append(result, []byte(".webm\" type=\"video/webm;\">")...)
