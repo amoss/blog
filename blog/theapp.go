@@ -54,6 +54,10 @@ func handler(out http.ResponseWriter, req *http.Request) {
                         out.Header().Set("Content-type", "image/jpeg")
                         out.Write(cnt)
                     }
+                default:
+                    out.WriteHeader(404)
+                    fmt.Printf("%29s: Unknown file extension %s\n", "handler", filename)
+                    out.Write( []byte("Unknown file type") )
                 case ".html":
                     if strings.HasSuffix(req.URL.Path,"index.html") {
                         dir := path.Dir(req.URL.Path)
