@@ -62,7 +62,7 @@ func classify(line []byte) LineClass {
         return LineClass{indent,d[0],text[len(d[0]):],Directive}
     }
     // Overlaps with directives, check if did not match
-    com := rexexp.MustCompile("^[.][.] ")
+    com := regexp.MustCompile("^[.][.] ")
     c := com.FindSubmatch(text)
     if c!=nil {
         return LineClass{indent,nil,text,Comment}
