@@ -16,6 +16,8 @@ const (
       Bulleted
       Numbered
       Attribute
+      TableSeparator
+      TableRow
       Other
       EOF
 )
@@ -47,6 +49,12 @@ func classify(line []byte) LineClass {
     text := bytes.TrimLeft( expanded," " )
     indent := len(expanded) - len(text)
 
+    if len(bytes.Trim(text,"-+"))==0 {
+        return LineClass{indent,nil,text,TableSeparator}
+    }
+    if text[0]=='|' && text[ len(text)-1 ]=='|' {
+        return LineClass{indent,nil,text,TableRow}
+    }
     dir := regexp.MustCompile("^[.][.] [A-Za-z]+::")
     d := dir.FindSubmatch(text)
     if d!=nil {

@@ -46,14 +46,16 @@ func inlineStyles(input []byte) []byte {
   code   := regexp.MustCompile(":code:`([^`]+)`")
   input   = code.ReplaceAll(input, []byte("<span class=\"code\">$1</span>"))
   math   := regexp.MustCompile(":math:`([^`]+)`")
-  input   = math.ReplaceAll(input, []byte("\\($1\\)"))
+  input   = math.ReplaceAll(input, []byte(`\($1\)`))
   return input
 }
 
 var tagNames = map[BlockE]string {
     BlkBulleted: "ul",
     BlkNumbered: "ol",
-    BlkDefList:  "dl" }
+    BlkDefList:  "dl",
+    BlkTableRow: "table",
+    BlkTableCell: "table" }
 
 
 func renderHtmlPage(headBlock Block, input chan Block) []byte {
@@ -187,16 +189,23 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("</div></div>")... )
 
+    lastTag  := ""
     lastKind := BlkParagraph
     for blk := range input {
-        if tagNames[lastKind]!="" && blk.kind!=lastKind {
+        if blk.kind!=BlkTableRow && blk.kind!=BlkTableCell && lastKind==BlkTableCell {
+            result = append(result, []byte("</tr>")... )
+        }
+        if lastTag!="" && tagNames[blk.kind]!=lastTag {
             result = append(result, []byte("</")... )
-            result = append(result, []byte(tagNames[lastKind])... )
+            result = append(result, []byte(lastTag)... )
             result = append(result, []byte(">")... )
         }
-        if tagNames[blk.kind]!="" && blk.kind!=lastKind {
+        if tagNames[blk.kind]!="" && tagNames[blk.kind]!=lastTag {
             result = append(result, []byte("<")... )
             result = append(result, []byte(tagNames[blk.kind])... )
+            if blk.kind==BlkTableRow {
+                result = append(result, []byte(" class=\"allborders\" width=\"100%\"")...)
+            }
             result = append(result, []byte(">")... )
         }
         switch blk.kind {
@@ -220,7 +229,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                         result = append(result, other...)
                         result = append(result, []byte("</div>")...)
                 }
-                result = append(result, []byte(`</div></div><div class="S169"><div class="Stitle169"><h1>`)... )
+                result = append(result, []byte("</div></div>\n<div class=\"S169\"><div class=\"Stitle169\"><h1>")... )
                 pageNum := fmt.Sprintf("%d. ",counter)
                 counter++
                 result = append(result, []byte(pageNum)... )
@@ -292,7 +301,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(".mov\" type=\"video/quicktime;\">")...)
                 result = append(result, []byte("</video>")...)
             case BlkReference:
-                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"/book-icon.png\"/></td>\n<td><a href=\"")...)
+                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img src=\"/book-icon.png\"/></td>\n<td><a href=\"")...)
                 result = append(result, blk.url... )
                 result = append(result, []byte("\">")...)
                 result = append(result, blk.title... )
@@ -311,9 +320,19 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("</dt><dd>")...)
                 result = append(result, inlineStyles(blk.body)... )
                 result = append(result, []byte("</dd>\n")...)
+            case BlkTableRow:
+                if lastKind==BlkTableCell {
+                    result = append(result, []byte("</tr>")... )
+                }
+                result = append(result, []byte("<tr>")...)
+            case BlkTableCell:
+                result = append(result, []byte("<td>")...)
+                result = append(result, inlineStyles(blk.body)...)
+                result = append(result, []byte("</td>")...)
             default:
-                fmt.Println("Block:", blk)
+                fmt.Println("Unknown Block:", blk)
         }
+        lastTag  = tagNames[blk.kind]
         lastKind = blk.kind
     }
     result = append(result, []byte("</div></div>")...)

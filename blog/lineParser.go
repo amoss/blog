@@ -31,6 +31,8 @@ const (
     BlkCode
     BlkQuote
     BlkReference
+    BlkTableRow
+    BlkTableCell
 )
 type Block struct {
     kind     BlockE
@@ -51,6 +53,7 @@ type ParseSt struct {
     indent      int
     topicIndent int
     pos         int
+    tabColumns  []int
     body        []byte
     directive   []byte
     output      chan Block
@@ -115,10 +118,65 @@ func ParseSt_Init(st *ParseSt) StateFn {
             return ParseSt_Bulleted
         case EOF:
             return nil
+        case TableSeparator:
+            colWidths := bytes.Split(st.cur.body,[]byte("+"))
+            // Split contains 0-len at beginning at end that we trim
+            st.tabColumns = make([]int,len(colWidths)-2)
+            for i:=0; i<len(colWidths)-2; i++ {
+                st.tabColumns[i] = len(colWidths[i+1])
+            }
+            st.next()
+            return ParseSt_Table
         default:
             panic("Don't know how to parse "+st.cur.String())
     }
     return nil
+}
+
+
+func ParseSt_Table(st *ParseSt) StateFn {
+    dbg(st)
+    fmt.Println("Table state", st.tabColumns)
+    rowCells := make( [][]byte, len(st.tabColumns))
+    for i:=0;i<len(rowCells);i++ {
+        rowCells[i] = make( []byte,0,1024 )
+    }
+    for {
+        switch st.cur.kind {
+            case Blank:
+                st.next()
+                return ParseSt_Init
+            case TableSeparator:
+                st.output <- Block{kind:BlkTableRow}
+                offset := 1
+                for i:=0; i<len(st.tabColumns); i++ {
+                    if st.cur.body[offset+st.tabColumns[i]]!='+' {
+                        msg := fmt.Sprintf("Table cells not aligned properly %d / %s \"%s\"!",
+                                           i,st.tabColumns, st.cur.body[:offset+st.tabColumns[i]+1])
+                        panic(msg)
+                    }
+                    st.output <- Block{kind:BlkTableCell,body:rowCells[i]}
+                    offset += st.tabColumns[i]+1
+                }
+                for i:=0;i<len(rowCells);i++ {
+                    rowCells[i] = make( []byte,0,1024 )
+                }
+                st.next()
+            case TableRow:
+                offset := 1
+                for i:=0; i<len(st.tabColumns); i++ {
+                    cell := st.cur.body[offset:offset+st.tabColumns[i]]
+                    rowCells[i] = append( rowCells[i], cell...)
+                    if st.cur.body[offset+st.tabColumns[i]]!='|' {
+                        panic("Table cells not aligned properly!")
+                    }
+                    offset += st.tabColumns[i]+1
+                }
+                st.next()
+            default:
+                panic("Unexpected line in table")
+        }
+    }
 }
 
 
