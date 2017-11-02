@@ -47,6 +47,7 @@ type Block struct {
     position []byte
     courseCode   []byte
     courseName   []byte
+    location     []byte
 }
 
 type ParseSt struct {
