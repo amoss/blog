@@ -54,6 +54,30 @@ func handler(out http.ResponseWriter, req *http.Request) {
                         out.Header().Set("Content-type", "image/jpeg")
                         out.Write(cnt)
                     }
+                case ".webm":
+                    filename := "data" + req.URL.Path
+                    cnt,err := ioutil.ReadFile(filename)
+                    if err!=nil && os.IsNotExist(err) {
+                        out.WriteHeader(404)
+                        fmt.Printf("%29s: Missing video %s\n",
+                                   "handler", filename)
+                        out.Write( []byte("File not found") )
+                    } else {
+                        out.Header().Set("Content-type", "video/webm")
+                        out.Write(cnt)
+                    }
+                case ".mov":
+                    filename := "data" + req.URL.Path
+                    cnt,err := ioutil.ReadFile(filename)
+                    if err!=nil && os.IsNotExist(err) {
+                        out.WriteHeader(404)
+                        fmt.Printf("%29s: Missing video %s\n",
+                                   "handler", filename)
+                        out.Write( []byte("File not found") )
+                    } else {
+                        out.Header().Set("Content-type", "video/quicktime")
+                        out.Write(cnt)
+                    }
                 default:
                     out.WriteHeader(404)
                     fmt.Printf("%29s: Unknown file extension %s\n", "handler",
