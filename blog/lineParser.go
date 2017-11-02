@@ -420,8 +420,8 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
         "author" : []byte("No author specified"),
         "date"   : []byte("No date specified"),
         "style"  : []byte(""),
-        "courseCode" : []byte(""),
-        "courseName" : []byte(""),
+        "coursecode" : []byte(""),
+        "coursename" : []byte(""),
     }
     for st.cur.kind==Attribute {
         atName := string(st.cur.marker)
@@ -429,8 +429,8 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
         st.next()
     }
     st.output <- Block{kind:BlkBigHeading, title:body,
-                       author:metadata["author"], courseCode:metadata["courseCode"],
-                       courseName:metadata["courseName"],
+                       author:metadata["author"], courseCode:metadata["coursecode"],
+                       courseName:metadata["coursename"],
                        date:metadata["date"], style:bytes.ToLower(metadata["style"]) }
     return ParseSt_Init
 }
