@@ -177,7 +177,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
     result = append(result, []byte(`<div id="slides">`)...)
     // Title slide
-    result = append(result, []byte(`<div class="S169"><div class="Sin169">`)...)
+    result = append(result, []byte(`<div class="Slogo"><img src="/logo.svg"/></div><div class="S169"><div class="Sin169">`)...)
     result = append(result, []byte("<h1>")... )
     result = append(result, inlineStyles(headBlock.courseCode)... )
     result = append(result, []byte("</h1>")... )
