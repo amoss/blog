@@ -45,6 +45,8 @@ type Block struct {
     style    []byte
     detail   []byte
     position []byte
+    courseCode   []byte
+    courseName   []byte
 }
 
 type ParseSt struct {
@@ -418,6 +420,8 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
         "author" : []byte("No author specified"),
         "date"   : []byte("No date specified"),
         "style"  : []byte(""),
+        "courseCode" : []byte(""),
+        "courseName" : []byte(""),
     }
     for st.cur.kind==Attribute {
         atName := string(st.cur.marker)
@@ -425,7 +429,8 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
         st.next()
     }
     st.output <- Block{kind:BlkBigHeading, title:body,
-                       author:metadata["author"],
+                       author:metadata["author"], courseCode:metadata["courseCode"],
+                       courseName:metadata["courseName"],
                        date:metadata["date"], style:bytes.ToLower(metadata["style"]) }
     return ParseSt_Init
 }

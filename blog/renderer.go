@@ -179,7 +179,10 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     // Title slide
     result = append(result, []byte(`<div class="S169"><div class="Sin169">`)...)
     result = append(result, []byte("<h1>")... )
-    result = append(result, inlineStyles(headBlock.title)... )
+    result = append(result, inlineStyles(headBlock.courseCode)... )
+    result = append(result, []byte("</h1>")... )
+    result = append(result, []byte("<h1>")... )
+    result = append(result, inlineStyles(headBlock.courseName)... )
     result = append(result, []byte("</h1>")... )
     result = append(result, []byte("<i>")... )
     result = append(result, headBlock.author... )
@@ -187,6 +190,9 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     result = append(result, []byte("<p>")... )
     result = append(result, headBlock.date... )
     result = append(result, []byte("</p>")... )
+    result = append(result, []byte("<h2>")... )
+    result = append(result, inlineStyles(headBlock.title)... )
+    result = append(result, []byte("</h2>")... )
     result = append(result, []byte("</div></div>")... )
 
     lastTag  := ""
