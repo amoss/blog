@@ -128,7 +128,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
             case BlkImage:
                 result = append(result, []byte("<img src=\"")...)
                 result = append(result, blk.body... )
-                result = append(result, []byte("\" />")...)
+                result = append(result, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/>")...)
             case BlkVideo:
                 result = append(result, []byte("<video width=\"100%%\" style=\"max-width:100%% max-height:95%%\" controls>\n")... )
                 result = append(result, []byte("<source src=\"")... )
@@ -285,11 +285,11 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 if layout=="single" {
                     result = append(result, []byte("<img src=\"")...)
                     result = append(result, blk.body... )
-                    result = append(result, []byte("\" />")...)
+                    result = append(result, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/>")...)
                 } else {
                     other = append(other, []byte("<img width=\"100%%\" src=\"")...)
                     other = append(other, blk.body... )
-                    other = append(other, []byte("\" />")...)
+                    other = append(other, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/>")...)
                 }
             case BlkVideo:
                 result = append(result, []byte("<video width=\"100%%\" style=\"max-width:100%% max-height:95%%\" controls>\n")... )
