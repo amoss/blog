@@ -44,8 +44,10 @@ function startSlides()
 function flipAspect()
 {
     s169 = document.getElementsByClassName("S169");
-    if(s169.length==0) {
+    console.log(s169)
+    if(s169.length!=0) {
         inner = document.getElementsByClassName("Sin169");
+        console.log(inner)
         for(var i=0; i<inner.length; i++) {
             inner[i].className = "Sin43";
         }
