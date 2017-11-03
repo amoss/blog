@@ -56,7 +56,10 @@ function flipAspect()
         inner = document.getElementsByClassName("Sin43");
         while(inner.length>0) { inner[0].className = "Sin169"; }
         while(s43.length>0)   { s43[0].className = "S169"; }
-    }
+    }  
+    calcAspect();
+    for (var i = 0; i < slides.length; i++) 
+        doScale(slides[i], mainScale);
 }
 
 function stopSlides()
