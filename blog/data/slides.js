@@ -41,6 +41,32 @@ function startSlides()
   document.documentElement.style.overflowY = 'hidden';
 }
 
+function flipAspect()
+{
+    s169 = document.getElementsByClassName("S169");
+    if(s169.length==0) {
+        inner = document.getElementsByClassName("Sin169");
+        for(var i=0; i<inner.length; i++) {
+            inner[i].className = "Sin43";
+        }
+        s169 = document.getElementsByClassName("S169");
+        for(var i=0; i<s169.length; i++) {
+            s169[i].className = "S43";
+        }
+    }
+    else
+    {
+        s43 = document.getElementsByClassName("S43");
+        inner = document.getElementsByClassName("Sin43");
+        for(var i=0; i<inner.length; i++) {
+            inner[i].className = "Sin169";
+        }
+        for(var i=0; i<s43.length; i++) {
+            s43[i].className = "S169";
+        }
+    }
+}
+
 function stopSlides()
 {
   showSlides = false;
