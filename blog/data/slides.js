@@ -48,13 +48,9 @@ function flipAspect()
     if(s169.length!=0) {
         inner = document.getElementsByClassName("Sin169");
         console.log(inner)
-        for(var i=0; i<inner.length; i++) {
-            inner[i].className = "Sin43";
-        }
+        while(inner.length>0) { inner[0].className = "Sin43"; }
         s169 = document.getElementsByClassName("S169");
-        for(var i=0; i<s169.length; i++) {
-            s169[i].className = "S43";
-        }
+        while(s169.length>0) { s169[0].className = "S43"; }
     }
     else
     {
