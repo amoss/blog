@@ -233,7 +233,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                         result = append(result, []byte("</div><div style=\"width:100%; height:49%; display:inline-block\">")... )
                         result = append(result, other...)
                         result = append(result, []byte("</div>")...)
-                    case "cols":
+                    case "cols", "columns":
                         result = append(result, []byte("</div><div style=\"width:49%;height:100%;display:inline-block;margin-left:1%\">")... )
                         result = append(result, other...)
                         result = append(result, []byte("</div>")...)
@@ -250,7 +250,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                     case "rows":
                         other = make([]byte, 0, 16384)
                         result = append(result, []byte("<div style=\"width:100%; height:49%; display:inline-block\">")... )
-                    case "cols":
+                    case "cols", "columns":
                         other = make([]byte, 0, 16384)
                         result = append(result, []byte("<div style=\"width:49%;height:100%;display:inline-block;vertical-align:top\">")... )
                 }
@@ -343,6 +343,18 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
         }
         lastTag  = tagNames[blk.kind]
         lastKind = blk.kind
+    }
+    // If the last slide was multi-part then emit the other part.
+    switch layout {
+        case "single":
+        case "rows":
+            result = append(result, []byte("</div><div style=\"width:100%; height:49%; display:inline-block\">")... )
+            result = append(result, other...)
+            result = append(result, []byte("</div>")...)
+        case "cols", "columns":
+            result = append(result, []byte("</div><div style=\"width:49%;height:100%;display:inline-block;margin-left:1%\">")... )
+            result = append(result, other...)
+            result = append(result, []byte("</div>")...)
     }
     result = append(result, []byte("</div></div>")...)
     result = append(result, pageFooter...)
