@@ -10,6 +10,7 @@ import (
       "path"
       "time"
       "strings"
+      "rst"
       //"regexp"
 )
 
@@ -113,11 +114,11 @@ func handler(out http.ResponseWriter, req *http.Request) {
                         } else {
                             filename = outside
                         }
-                        lines  := LineScanner(filename)
+                        lines  := rst.LineScanner(filename)
                         if lines!=nil {
                             fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
-                            blocks := parse(*lines)
-                            out.Write( renderHtml(blocks) )
+                            blocks := rst.Parse(*lines)
+                            out.Write( rst.RenderHtml(blocks) )
                             return
                         } else {
                             fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)
@@ -137,9 +138,9 @@ func main() {
     for _,arg := range os.Args[1:] {
         fmt.Println(arg)
         switch arg {
-            case "--lines":  lineScannerDbg  = true
-            case "--parse":  lineParserStDbg = true
-            case "--blocks": lineParserDbg   = true
+            case "--lines":  rst.LineScannerDbg  = true
+            case "--parse":  rst.LineParserStDbg = true
+            case "--blocks": rst.LineParserDbg   = true
             default: panic("Unrecognised arg "+arg)
         }
     }
