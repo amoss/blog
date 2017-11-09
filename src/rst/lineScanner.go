@@ -1,4 +1,4 @@
-package main
+package rst
 import (
     "os"
     "bufio"
@@ -6,7 +6,7 @@ import (
     "bytes"
     "fmt"
 )
-var lineScannerDbg bool = false
+var LineScannerDbg bool = false
 type LineClassE int
 const (
       Blank LineClassE = iota
@@ -103,7 +103,7 @@ func LineScanner(path string) *chan LineClass {
 
         for scanner.Scan() {
             line := classify( scanner.Bytes() )
-            if lineScannerDbg { fmt.Println("Lex:",line) }
+            if LineScannerDbg { fmt.Println("Lex:",line) }
             output <- line
         }
         output <- LineClass{kind:EOF}

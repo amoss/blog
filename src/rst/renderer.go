@@ -1,4 +1,4 @@
-package main
+package rst
 
 import (
     "fmt"
@@ -362,7 +362,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
 }
 
 
-func renderHtml(input chan Block) []byte {
+func RenderHtml(input chan Block) []byte {
     headBlock := <-input
     if headBlock.kind!=BlkBigHeading {
         var bstr string

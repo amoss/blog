@@ -1,4 +1,4 @@
-package main
+package rst
 
 import (
     "runtime/debug"
@@ -7,8 +7,8 @@ import (
     "fmt"
     "runtime"
 )
-var lineParserDbg = false
-var lineParserStDbg = false
+var LineParserDbg = false
+var LineParserStDbg = false
 
 func processMetadata(key []byte, value []byte) {
     fmt.Println("Dropping:",string(key),"=",string(value))
@@ -74,7 +74,7 @@ func (p *ParseSt) next() {
 func dbg(st *ParseSt) {
     pc,_,_,_ := runtime.Caller(1)
     callingName := runtime.FuncForPC(pc).Name()
-    if lineParserStDbg {
+    if LineParserStDbg {
         fmt.Printf("%29s: %s %s %s\n", "parser", callingName, st, st.cur)
     }
 }
@@ -436,7 +436,7 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
     return ParseSt_Init
 }
 
-func parse(input chan LineClass) chan Block {
+func Parse(input chan LineClass) chan Block {
     state := &ParseSt{input:input}
     state.indent = -1
     state.topicIndent = -1
