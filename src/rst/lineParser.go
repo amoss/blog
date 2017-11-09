@@ -25,6 +25,8 @@ const (
     BlkDefList
     BlkTopicBegin
     BlkTopicEnd
+    BlkBeginLongform
+    BlkEndLongform
     BlkImage
     BlkVideo
     BlkShell
@@ -133,6 +135,12 @@ func ParseSt_Init(st *ParseSt) StateFn {
         case Comment:
             st.next()
             return ParseSt_Init
+        case BeginLongform:
+            st.next()
+            st.output <- Block{kind:BlkBeginLongform}
+        case EndLongform:
+            st.next()
+            st.output <- Block{kind:BlkEndLongform}
         default:
             panic("Don't know how to parse "+st.cur.String())
     }

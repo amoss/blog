@@ -173,6 +173,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     layout  := "single"
     var other []byte
     result := make([]byte, 0, 16384)
+    longform := make([]byte, 0, 16384)
     result = append(result, makePageHeader(string(headBlock.style))...)
     result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button><button onclick="javascript:flipAspect()">flip aspect</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
     result = append(result, []byte(`<div id="slides">`)...)

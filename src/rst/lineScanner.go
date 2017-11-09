@@ -20,6 +20,8 @@ const (
       TableRow
       Other
       Comment
+      BeginLongform
+      EndLongform
       EOF
 )
 type LineClass struct {
@@ -45,6 +47,12 @@ func classify(line []byte) LineClass {
     }
     if len(bytes.Trim(expanded,"-"))==0 {
         return LineClass{0,nil,nil,SubsectionHeading}
+    }
+    if string(expanded[:7])=="/*{{{*/" {
+        return LineClass{0,nil,nil,BeginLongform}
+    }
+    if string(expanded[:7])=="/*}}}*/" {
+        return LineClass{0,nil,nil,EndLongform}
     }
 
     text := bytes.TrimLeft( expanded," " )
