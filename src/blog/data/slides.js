@@ -178,8 +178,9 @@ function flipPage(num)
   var nav = document.getElementById('slide'+num+'_long');
   nav.style.visibility = 'visible';
   nav.style.display     = 'block';
-  slides[i].visibility = 'hidden';
-  slides[i].display     = 'none';
+  slides[i].style.visibility = 'hidden';
+  slides[i].style.display     = 'none';
+  console.log(slides[i]);
 }
 
 
