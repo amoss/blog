@@ -489,3 +489,7 @@ div.flipicon {
     left:3%;
     position: absolute;
 }
+
+div.longform {
+    display: hidden;
+}
