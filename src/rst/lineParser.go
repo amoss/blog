@@ -138,9 +138,11 @@ func ParseSt_Init(st *ParseSt) StateFn {
         case BeginLongform:
             st.next()
             st.output <- Block{kind:BlkBeginLongform}
+            return ParseSt_Init
         case EndLongform:
             st.next()
             st.output <- Block{kind:BlkEndLongform}
+            return ParseSt_Init
         default:
             panic("Don't know how to parse "+st.cur.String())
     }
@@ -404,6 +406,10 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                 st.output <- Block{kind:BlkMediumHeading,body:body,style:layout}
             }
             st.indent = -1
+            return ParseSt_Init
+        case EndLongform:
+            st.next()
+            st.output <- Block{kind:BlkEndLongform}
             return ParseSt_Init
         default:
             dbgForce(st)
