@@ -491,5 +491,6 @@ div.flipicon {
 }
 
 div.longform {
-    display: hidden;
+    display: none;
+    visibility: hidden;
 }
