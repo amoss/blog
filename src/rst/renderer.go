@@ -234,7 +234,9 @@ func makeMultiChanSlide(layout string, title []byte) MultiChanSlide{
 }
 
 func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
-    buffer = append(buffer, []byte("<div class=\"S169\"><div class=\"Stitle169\"><h1>")... )
+    buffer = append(buffer, []byte("\n<div class=\"S169\" id=\"slide")... )
+    buffer = append(buffer, []byte(fmt.Sprintf("%d",counter))... )
+    buffer = append(buffer, []byte("\"><div class=\"Stitle169\"><h1>")... )
     pageNum := fmt.Sprintf("%d. ",counter)
     buffer = append(buffer, []byte(pageNum)... )
     buffer = append(buffer, inlineStyles(self.title)... )
@@ -256,6 +258,13 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
             buffer = append(buffer, []byte("</div>")...)
     }
     buffer = append(buffer, []byte("</div></div>\n")...)
+    if len(self.longform)>0 {
+        buffer = append(buffer, []byte("\n<div class=\"longform\" id=\"slide")...)
+        buffer = append(buffer, []byte(fmt.Sprintf("%d",counter))...)
+        buffer = append(buffer, []byte("_long\">")...)
+        buffer = append(buffer, self.longform...)
+        buffer = append(buffer, []byte("</div>")...)
+    }
     return buffer
 }
 
