@@ -175,12 +175,11 @@ function leftButton()
 
 function flipPage(num)
 {
-  nav = document.getElementById('slide'+num+'_long');
+  var nav = document.getElementById('slide'+num+'_long');
   nav.style.visibility = 'visible';
   nav.style.display     = 'block';
-  nav = document.getElementById('slide'+num);
-  nav.style.visibility = 'hidden';
-  nav.style.display     = 'none';
+  slides[i].style.visibility = 'hidden';
+  slides[i].style.display     = 'none';
 }
 
 
