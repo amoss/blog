@@ -30,7 +30,8 @@ func handler(out http.ResponseWriter, req *http.Request) {
              "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
              "/SourceSansPro-Regular.otf", "/slides.css",
              "/slides.js", "/logo.svg", "/leftarrow.svg",
-             "/rightarrow.svg", "/closearrow.svg", "/settings.svg":
+             "/rightarrow.svg", "/closearrow.svg", "/settings.svg",
+             "/fliparrow.jpg":
             target := "data" + req.URL.Path
             fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
             cnt,_ := ioutil.ReadFile(target)

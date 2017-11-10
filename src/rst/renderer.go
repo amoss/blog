@@ -262,13 +262,18 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
             buffer = append(buffer, self.secondary...)
             buffer = append(buffer, []byte("</div>")...)
     }
-    buffer = append(buffer, []byte("</div></div>\n")...)
+    buffer = append(buffer, []byte("</div>\n")...)
     if len(self.longform)>0 {
+        buffer = append(buffer, []byte("<div class=\"flipicon\"><a onclick=\"javascript:flipPage(")...)
+        buffer = append(buffer, []byte(fmt.Sprintf("%d",counter))...)
+        buffer = append(buffer, []byte(")\"><img src=\"/fliparrow.jpg\"></img></a>></div>\n")...)
         buffer = append(buffer, []byte("\n<div class=\"longform\" id=\"slide")...)
         buffer = append(buffer, []byte(fmt.Sprintf("%d",counter))...)
         buffer = append(buffer, []byte("_long\">")...)
         buffer = append(buffer, self.longform...)
         buffer = append(buffer, []byte("</div>")...)
+    } else {
+        buffer = append(buffer, []byte("</div>\n")...)
     }
     return buffer
 }

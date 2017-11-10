@@ -481,3 +481,11 @@ div#navpanel {
   background: rgba(0,0,0,0.8);
   visibility: hidden;
 }
+
+div#flipicon {
+    width:64px;
+    height:64px;
+    top:40%;
+    left:3%;
+    position: relative;
+}
