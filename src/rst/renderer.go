@@ -220,8 +220,13 @@ func (self *MultiChanSlide) PrintfHL( highlight bool, format string, args ...int
             case "single":
                 self.primary = append(self.primary, []byte(formatted)...)
         }
-        self.longform = append(self.longform, []byte(formatted)...)
+        //self.longform = append(self.longform, []byte(formatted)...)
     }
+}
+
+func (self *MultiChanSlide) PrintfLong( format string, args ...interface{} ) {
+    formatted := fmt.Sprintf(format, args...)
+    self.longform = append(self.longform, []byte(formatted)...)
 }
 
 func makeMultiChanSlide(layout string, title []byte) MultiChanSlide{
@@ -354,6 +359,8 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
             case BlkImage:
                 target.PrintfHL(true,
                                 "<img src=\"%s\" style=\"width:100%%; max-height:100%%; object-fit:contain\"/>",
+                                blk.body)
+                target.PrintfLong("<img src=\"%s\" style=\"width:20rem; max-height:20rem%%; object-fit:contain\"/>",
                                 blk.body)
             case BlkVideo:
                 target.Printf("<video width=\"100%%\" style=\"max-width:100%%; max-height:95%%\" controls>\n" +
