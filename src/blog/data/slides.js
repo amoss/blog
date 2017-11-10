@@ -177,7 +177,7 @@ function flipPage(num)
 {
   nav = document.getElementById('slide'+num+'_long');
   nav.style.visibility = 'visible';
-  nav.style.hidden     = 'none';
+  nav.style.display     = 'block';
 }
 
 
