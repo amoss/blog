@@ -360,7 +360,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 target.PrintfHL(true,
                                 "<img src=\"%s\" style=\"width:100%%; max-height:100%%; object-fit:contain\"/>",
                                 blk.body)
-                target.PrintfLong("<img src=\"%s\" style=\"width:20rem; max-height:20rem%%; object-fit:contain\"/>",
+                target.PrintfLong("<img src=\"%s\" style=\"width:25rem; max-height:25rem%%; border: 1px solid black; margin:1rem; object-fit:contain\"/>",
                                 blk.body)
             case BlkVideo:
                 target.Printf("<video width=\"100%%\" style=\"max-width:100%%; max-height:95%%\" controls>\n" +
