@@ -482,10 +482,10 @@ div#navpanel {
   visibility: hidden;
 }
 
-div#flipicon {
+div.flipicon {
     width:64px;
     height:64px;
     top:40%;
     left:3%;
-    position: relative;
+    position: absolute;
 }
