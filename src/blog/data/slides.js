@@ -188,7 +188,7 @@ function flipBackPage(num)
   nav.style.visibility = 'hidden';
   nav.style.display     = 'none';
   slides[num].style.visibility = 'visible';
-  slides[num].style.display     = 'block';
+  slides[num].style.display     = 'inline-block';
 }
 
 
