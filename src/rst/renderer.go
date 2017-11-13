@@ -173,6 +173,7 @@ type MultiChanSlide struct {
     title  []byte
     active string       // primary, secondary, longform
     layout string       // single, rows or columns
+    usedLongform bool
 }
 
 func (self *MultiChanSlide) extendB( data []byte  ) {
@@ -229,11 +230,13 @@ func (self *MultiChanSlide) PrintfLong( format string, args ...interface{} ) {
     self.longform = append(self.longform, []byte(formatted)...)
 }
 
-func makeMultiChanSlide(layout string, title []byte) MultiChanSlide{
+func makeMultiChanSlide(layout string, title []byte, pagenum int) MultiChanSlide{
   result := MultiChanSlide{layout:layout, title:title}
   result.primary   = make([]byte,0,16384)
   result.secondary = make([]byte,0,16384)
   result.longform  = make([]byte,0,16384)
+  result.PrintfLong( "<h1><a><img src=\"flipbackarrow.jpg\" onclick=\"javascript:blah(%d)\"></img></a></h1>",
+                     pagenum)
   result.active    = "primary"
   return result
 }
@@ -263,7 +266,7 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
             buffer = append(buffer, []byte("</div>")...)
     }
     buffer = append(buffer, []byte("</div>\n")...)
-    if len(self.longform)>0 {
+    if self.usedLongform {
         buffer = append(buffer, []byte("<div class=\"flipicon\"><a onclick=\"javascript:flipPage(")...)
         buffer = append(buffer, []byte(fmt.Sprintf("%d",counter))...)
         buffer = append(buffer, []byte(")\"><img src=\"/fliparrow.jpg\"></img></a></div>\n")...)
@@ -339,7 +342,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                         counter++
                     }
                     layout = string(blk.style)
-                    target = makeMultiChanSlide(layout,blk.body)
+                    target = makeMultiChanSlide(layout,blk.body,counter)
                 }
             case BlkShell:
                 target.PrintfHL(bytes.Compare(blk.position,[]byte("highlight"))==0,
@@ -393,6 +396,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 target.Printf("<td>%s</td>", inlineStyles(blk.body) )
             case BlkBeginLongform:
                 target.active = "longform"
+                target.usedLongform = true
             case BlkEndLongform:
                 target.active = "primary"
             default:
