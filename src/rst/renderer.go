@@ -235,8 +235,8 @@ func makeMultiChanSlide(layout string, title []byte, pagenum int) MultiChanSlide
   result.primary   = make([]byte,0,16384)
   result.secondary = make([]byte,0,16384)
   result.longform  = make([]byte,0,16384)
-  result.PrintfLong( "<h1><a><img src=\"/flipbackarrow.jpg\" onclick=\"javascript:blah(%d)\"></img></a></h1>",
-                     pagenum)
+  result.PrintfLong( "<h1><a><img src=\"/flipbackarrow.jpg\" onclick=\"javascript:flipBackPage(%d)\"></img></a>%s</h1>",
+                     pagenum, title)
   result.active    = "primary"
   return result
 }

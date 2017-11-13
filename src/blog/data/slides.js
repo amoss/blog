@@ -182,4 +182,13 @@ function flipPage(num)
   slides[num].style.display     = 'none';
 }
 
+function flipBackPage(num)
+{
+  var nav = document.getElementById('slide'+num+'_long');
+  nav.style.visibility = 'hidden';
+  nav.style.display     = 'none';
+  slides[num].style.visibility = 'visible';
+  slides[num].style.display     = 'block';
+}
+
 
