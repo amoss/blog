@@ -378,7 +378,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
             case BlkReference:
                 target.Printf("<div class=bibitem><table style=\"width=100%%\">\n" +
                               "<tr><td rowspan=\"3\"><img src=\"/book-icon.png\"/></td>\n" +
-                              "<td><a href=\"%s\"></a></td></tr><tr><td><i>%s</i></td></tr>",
+                              "<td><a href=\"%s\">%s</a></td></tr><tr><td><i>%s</i></td></tr>",
                               blk.url, blk.title, blk.author)
                 if blk.detail!=nil {
                     target.Printf("<tr><td>%s</td></tr>", blk.detail)
