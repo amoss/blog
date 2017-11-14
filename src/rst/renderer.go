@@ -223,6 +223,8 @@ func (self *MultiChanSlide) PrintfHL( highlight bool, format string, args ...int
         }
         //self.longform = append(self.longform, []byte(formatted)...)
     }
+    fmt.Println("PrintfHL/secondary", self.layout, formatted)
+    fmt.Println(self.secondary)
 }
 
 func (self *MultiChanSlide) PrintfLong( format string, args ...interface{} ) {
@@ -262,6 +264,8 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
             buffer = append(buffer, []byte("<div style=\"width:49%;height:100%;display:inline-block;vertical-align:top\">")... )
             buffer = append(buffer, self.primary...)
             buffer = append(buffer, []byte("</div><div style=\"width:49%;height:100%;display:inline-block;margin-left:1%\">")... )
+            fmt.Println("Finalise/secondary")
+            fmt.Println(self.secondary)
             buffer = append(buffer, self.secondary...)
             buffer = append(buffer, []byte("</div>")...)
     }
