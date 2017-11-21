@@ -264,7 +264,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             return ParseSt_Init
         case "shell","code":
             position := []byte("default")
-            width := []byte("")
+            style := []byte("")
             if st.cur.kind==Attribute {
                 switch string( bytes.ToLower(st.cur.marker) ) {
                     case "position":
