@@ -346,8 +346,8 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                 }
             case BlkShell:
                 var styles string
-                if len(blk.width)>0 {
-                    styles = " style=\"width:" + string(blk.width) + "\""
+                if len(blk.style)>0 {
+                    styles = " style=\"" + string(blk.style) + "\""
                 } else {
                     styles = ""
                 }

@@ -50,7 +50,6 @@ type Block struct {
     courseCode   []byte
     courseName   []byte
     location     []byte
-    width        []byte
 }
 
 type ParseSt struct {
@@ -271,8 +270,8 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
                     case "position":
                         position = bytes.ToLower(st.cur.body)
                         st.next()
-                    case "width":
-                        width = st.cur.body
+                    case "style":
+                        style = st.cur.body
                         st.next()
                     default:
                         panic("Unknown position attribute "+string(st.cur.marker))
@@ -298,9 +297,9 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             // Missing terminating blank will not be detected - is it worth it?
             switch string(dirName) {
                 case "shell":
-                    st.output <- Block{kind:BlkShell,body:st.body,position:position,width:width}
+                    st.output <- Block{kind:BlkShell,body:st.body,position:position,style:style}
                 case "code":
-                    st.output <- Block{kind:BlkCode,body:st.body,position:position,width:width}
+                    st.output <- Block{kind:BlkCode,body:st.body,position:position,style:style}
             }
             st.indent = -1
             return ParseSt_Init
