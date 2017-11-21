@@ -345,8 +345,14 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                     target = makeMultiChanSlide(layout,blk.body,counter)
                 }
             case BlkShell:
+                var styles string
+                if len(blk.width)>0 {
+                    styles = " style=\"width:" + string(blk.width) + "\""
+                } else {
+                    styles = ""
+                }
                 target.PrintfHL(bytes.Compare(blk.position,[]byte("highlight"))==0,
-                                "<div class=\"shell\">%s</div>",
+                                "<div class=\"shell\"%s>%s</div>", styles,
                                 html.EscapeString(string(blk.body)) )
             case BlkCode:
                 target.PrintfHL(bytes.Compare(blk.position,[]byte("highlight"))==0,
