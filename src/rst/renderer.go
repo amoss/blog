@@ -34,7 +34,54 @@ var pageFooter = []byte(`
 </html>
 `)
 
+/* We need to avoid applying the links / strong / emp styles inside the literal
+   environments, hence this simple state machine. Partition the input into
+   alternating non-literal / literal pieces and apply the two mappings 
+   alternately.
+*/
 func inlineStyles(input []byte) []byte {
+    result := make([]byte,0,4096)
+    links  := regexp.MustCompile("`([^`]+) <([^>]+)>`_")
+    strong := regexp.MustCompile("\\*\\*([^*]+)\\*\\*")
+    emp    := regexp.MustCompile(" \\*([^*]+)\\*")
+
+    litEnvs   := regexp.MustCompile(":(shell|code|math):`[^`]+`")
+    partition := litEnvs.FindAllIndex(input,-1)
+    pos := 0
+    for _,pair := range partition {
+        nonLit := links.ReplaceAll(input[pos:pair[0]], []byte("<a href=\"$2\">$1</a>"))
+        nonLit  = strong.ReplaceAll(nonLit,[]byte("<b>$1</b>"))
+        nonLit  = emp.ReplaceAll(nonLit, []byte(" <i>$1</i>"))
+        result = append(result, nonLit...)
+        fmt.Printf("Inline: %s %s\n", pair,result)
+        switch input[ pair[0]+1 ] {
+            case 'm':
+                result = append(result, []byte(`\(`)... )
+                result = append(result, input[ pair[0]+7 : pair[1]-1 ]... )
+                result = append(result, []byte(`\)`)... )
+            case 'c':
+                result = append(result, []byte(`<span class="code">`)... )
+                result = append(result, input[ pair[0]+7 : pair[1]-1 ]... )
+                result = append(result, []byte(`</span>`)... )
+            case 's':
+                result = append(result, []byte(`<span class="shell">`)... )
+                result = append(result, input[ pair[0]+8 : pair[1]-1 ]... )
+                result = append(result, []byte(`</span>`)... )
+        }
+        pos = pair[1]+1
+        fmt.Printf("Inline2: %s %s\n", pair,result)
+    }
+    if pos<len(input) {
+        nonLit := links.ReplaceAll(input[pos:], []byte("<a href=\"$2\">$1</a>"))
+        nonLit  = strong.ReplaceAll(nonLit,[]byte("<b>$1</b>"))
+        nonLit  = emp.ReplaceAll(nonLit, []byte(" <i>$1</i>"))
+        result = append(result, nonLit...)
+    }
+    return result
+}
+
+
+/*func inlineStyles(input []byte) []byte {
   links  := regexp.MustCompile("`([^`]+) <([^>]+)>`_")
   input   = links.ReplaceAll(input, []byte("<a href=\"$2\">$1</a>"))
   strong := regexp.MustCompile("\\*\\*([^*]+)\\*\\*")
@@ -48,7 +95,7 @@ func inlineStyles(input []byte) []byte {
   math   := regexp.MustCompile(":math:`([^`]+)`")
   input   = math.ReplaceAll(input, []byte(`\($1\)`))
   return input
-}
+}*/
 
 var tagNames = map[BlockE]string {
     BlkBulleted: "ul",
