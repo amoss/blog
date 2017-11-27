@@ -115,6 +115,10 @@ div.ScalloHd {
   font-size: 24;
   white-space: pre;
 }
+div.shell {
+margin-left: 10px;
+margin-right: 10px;
+}
 
 .verbatim {
   background:    white;
