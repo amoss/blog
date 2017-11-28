@@ -12,6 +12,14 @@ func makePageHeader(extra string) []byte {
     result = append(result,[]byte(`
 <html>
 <head>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ["\\\\((","\\\\))"] ],
+      processEscapes: true
+    }
+  });
+</script>
 <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 <link href="/styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
@@ -56,9 +64,9 @@ func inlineStyles(input []byte) []byte {
         fmt.Printf("Inline: %s %s\n", pair,result)
         switch input[ pair[0]+1 ] {
             case 'm':
-                result = append(result, []byte(`\(`)... )
+                result = append(result, []byte(`\\((`)... )
                 result = append(result, input[ pair[0]+7 : pair[1]-1 ]... )
-                result = append(result, []byte(`\)`)... )
+                result = append(result, []byte(`\\))`)... )
             case 'c':
                 result = append(result, []byte(`<span class="code">`)... )
                 result = append(result, input[ pair[0]+7 : pair[1]-1 ]... )
