@@ -219,6 +219,9 @@ func ParseSt_Numbered(st *ParseSt) StateFn {
             st.next()
             st.output <- Block{kind:BlkEndLongform}
             return ParseSt_Init
+        case EOF:
+            st.output <- Block{kind:BlkNumbered,body:st.body}
+            return nil
         default: panic("Can't continue numbers with "+string(st.cur.kind))
     }
 }
@@ -247,6 +250,9 @@ func ParseSt_Bulleted(st *ParseSt) StateFn {
             st.next()
             st.output <- Block{kind:BlkEndLongform}
             return ParseSt_Init
+        case EOF:
+            st.output <- Block{kind:BlkBulleted,body:st.body}
+            return nil
         default: panic("Can't continue bullets with "+string(st.cur.kind))
     }
 }
