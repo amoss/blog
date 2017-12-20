@@ -14,6 +14,13 @@ import (
       //"regexp"
 )
 
+var mimeTypes = map[string]string {
+    ".jpg":  "image/jpg",
+    ".webm": "video/webm",
+    ".mov":  "video/quicktime",
+    ".svg":  "image/svg+xml",
+}
+
 func handler(out http.ResponseWriter, req *http.Request) {
     t := time.Now()
     fmt.Println(t.Format(time.RFC1123),"Request", *req)
@@ -43,94 +50,75 @@ func handler(out http.ResponseWriter, req *http.Request) {
             if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
                 http.Redirect(out,req,req.URL.Path+"index.html",302)
             }
-            switch( path.Ext(req.URL.Path) ) {
-                case ".jpg":
-                    filename := "data" + req.URL.Path
-                    cnt,err := ioutil.ReadFile(filename)
-                    if err!=nil && os.IsNotExist(err) {
-                        out.WriteHeader(404)
-                        fmt.Printf("%29s: Missing image %s\n",
-                                   "handler", filename)
-                        out.Write( []byte("File not found") )
-                    } else {
-                        out.Header().Set("Content-type", "image/jpeg")
-                        out.Write(cnt)
-                    }
-                case ".webm":
-                    filename := "data" + req.URL.Path
-                    cnt,err := ioutil.ReadFile(filename)
-                    if err!=nil && os.IsNotExist(err) {
-                        out.WriteHeader(404)
-                        fmt.Printf("%29s: Missing video %s\n",
-                                   "handler", filename)
-                        out.Write( []byte("File not found") )
-                    } else {
-                        out.Header().Set("Content-type", "video/webm")
-                        out.Write(cnt)
-                    }
-                case ".mov":
-                    filename := "data" + req.URL.Path
-                    cnt,err := ioutil.ReadFile(filename)
-                    if err!=nil && os.IsNotExist(err) {
-                        out.WriteHeader(404)
-                        fmt.Printf("%29s: Missing video %s\n",
-                                   "handler", filename)
-                        out.Write( []byte("File not found") )
-                    } else {
-                        out.Header().Set("Content-type", "video/quicktime")
-                        out.Write(cnt)
-                    }
-                default:
+            mime,ok := mimeTypes[ path.Ext(req.URL.Path) ]
+            if ok {
+                filename := "data" + req.URL.Path
+                cnt,err := ioutil.ReadFile(filename)
+                if err!=nil && os.IsNotExist(err) {
                     out.WriteHeader(404)
-                    fmt.Printf("%29s: Unknown file extension %s\n", "handler",
-                               path.Ext(req.URL.Path))
-                    out.Write( []byte("Unknown file type") )
-                case ".html":
-                    if strings.HasSuffix(req.URL.Path,"index.html") {
-                        dir := path.Dir(req.URL.Path)
-                        fmt.Printf("Index detected %s <- %s\n",dir,req.URL.Path)
-                        inside  := "data" + dir + "/index.rst"
-                        outside := "data" + dir + ".rst"
-                        insideFI, insideErr := os.Stat(inside)
-                        fmt.Printf("%s: %s, %s\n", inside, insideFI, insideErr)
-                        outsideFI, outsideErr := os.Stat(outside)
-                        fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
-                        if insideFI==nil && outsideFI==nil {
-                            out.WriteHeader(404)
-                            fmt.Printf("%29s: Can't resolve %s or %s\n",
-                                       "handler", inside, outside)
-                            out.Write( []byte("File not found") )
-                            return
+                    fmt.Printf("%29s: Missing file %s\n",
+                               "handler", filename)
+                    out.Write( []byte("File not found") )
+                } else {
+                    out.Header().Set("Content-type", mime)
+                    fmt.Printf("%29s: Recognised extension %s, served %s\n",
+                               "handler", path.Ext(req.URL.Path), mime)
+                    out.Write(cnt)
+                }
+            } else {
+                switch( path.Ext(req.URL.Path) ) {
+                    default:
+                        out.WriteHeader(404)
+                        fmt.Printf("%29s: Unknown file extension %s\n", "handler",
+                                   path.Ext(req.URL.Path))
+                        out.Write( []byte("Unknown file type") )
+                    case ".html":
+                        if strings.HasSuffix(req.URL.Path,"index.html") {
+                            dir := path.Dir(req.URL.Path)
+                            fmt.Printf("Index detected %s <- %s\n",dir,req.URL.Path)
+                            inside  := "data" + dir + "/index.rst"
+                            outside := "data" + dir + ".rst"
+                            insideFI, insideErr := os.Stat(inside)
+                            fmt.Printf("%s: %s, %s\n", inside, insideFI, insideErr)
+                            outsideFI, outsideErr := os.Stat(outside)
+                            fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
+                            if insideFI==nil && outsideFI==nil {
+                                out.WriteHeader(404)
+                                fmt.Printf("%29s: Can't resolve %s or %s\n",
+                                           "handler", inside, outside)
+                                out.Write( []byte("File not found") )
+                                return
+                            }
+                            if insideFI!=nil && outsideFI!=nil {
+                                out.WriteHeader(404)
+                                fmt.Printf("%29s: Ambiguous! Can resolve %s AND %s\n",
+                                           "handler", inside, outside)
+                                out.Write( []byte("File not found (ambiguous configuration)") )
+                                return
+                            }
+                            var filename string
+                            if insideFI!=nil {
+                                filename = inside
+                            } else {
+                                filename = outside
+                            }
+                            lines  := rst.LineScanner(filename)
+                            if lines!=nil {
+                                fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
+                                blocks := rst.Parse(*lines)
+                                out.Write( rst.RenderHtml(blocks) )
+                                return
+                            } else {
+                                fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)
+                                out.WriteHeader(404)
+                                out.Write( []byte("File not found") )
+                                return
+                            }
                         }
-                        if insideFI!=nil && outsideFI!=nil {
-                            out.WriteHeader(404)
-                            fmt.Printf("%29s: Ambiguous! Can resolve %s AND %s\n",
-                                       "handler", inside, outside)
-                            out.Write( []byte("File not found (ambiguous configuration)") )
-                            return
+                        if path.Ext(req.URL.Path)==".jpg" {
+                            fmt.Printf("-----> Check file-ext on\n",req.URL.Path)
                         }
-                        var filename string
-                        if insideFI!=nil {
-                            filename = inside
-                        } else {
-                            filename = outside
-                        }
-                        lines  := rst.LineScanner(filename)
-                        if lines!=nil {
-                            fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
-                            blocks := rst.Parse(*lines)
-                            out.Write( rst.RenderHtml(blocks) )
-                            return
-                        } else {
-                            fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)
-                            out.WriteHeader(404)
-                            out.Write( []byte("File not found") )
-                            return
-                        }
-                    }
-                    if path.Ext(req.URL.Path)==".jpg" {
-                        fmt.Printf("-----> Check file-ext on\n",req.URL.Path)
-                    }
+                }
             }
     }
 }
