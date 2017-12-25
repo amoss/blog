@@ -128,5 +128,8 @@ func handler(out http.ResponseWriter, req *http.Request) {
 
 func main() {
     http.HandleFunc("/", handler)
-    http.ListenAndServe(":8080", nil)
+    err := http.ListenAndServe(":8080", nil)
+    if err != nil {
+        fmt.Printf("Error creating server: %s\n", err)
+    }
 }
