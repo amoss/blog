@@ -37,7 +37,9 @@ func handler(out http.ResponseWriter, req *http.Request) {
     switch req.URL.Path {
         case "/styles.css", "/graymaster2.jpg",
              "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
-             "/SourceSansPro-Regular.otf":
+             "/SourceSansPro-Regular.otf",
+             "/ArbutusSlab-Regular.ttf",  "/Rasa-Medium.ttf",        "/Yrsa-Medium.ttf",
+             "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf":
             target := "data" + req.URL.Path
             fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
             cnt,_ := ioutil.ReadFile(target)
