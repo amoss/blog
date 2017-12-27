@@ -37,19 +37,19 @@ const (
     BlkTableCell
 )
 type Block struct {
-    kind     BlockE
-    body     []byte
-    author   []byte
-    title    []byte
-    url      []byte
-    heading  []byte
-    date     []byte
-    style    []byte
-    detail   []byte
-    position []byte
-    courseCode   []byte
-    courseName   []byte
-    location     []byte
+    Kind     BlockE
+    Body     []byte
+    Author   []byte
+    Title    []byte
+    Url      []byte
+    Heading  []byte
+    Date     []byte
+    Style    []byte
+    Detail   []byte
+    Position []byte
+    CourseCode   []byte
+    CourseName   []byte
+    Location     []byte
 }
 
 type ParseSt struct {
@@ -92,7 +92,7 @@ func ParseSt_Init(st *ParseSt) StateFn {
     if st.topicIndent>=0  &&
        st.cur.kind!=Blank &&
        st.cur.indent<st.topicIndent {
-        st.output <- Block{kind:BlkTopicEnd}
+        st.output <- Block{Kind:BlkTopicEnd}
         st.topicIndent=-1
     }
     switch st.cur.kind {
@@ -137,11 +137,11 @@ func ParseSt_Init(st *ParseSt) StateFn {
             return ParseSt_Init
         case BeginLongform:
             st.next()
-            st.output <- Block{kind:BlkBeginLongform}
+            st.output <- Block{Kind:BlkBeginLongform}
             return ParseSt_Init
         case EndLongform:
             st.next()
-            st.output <- Block{kind:BlkEndLongform}
+            st.output <- Block{Kind:BlkEndLongform}
             return ParseSt_Init
         default:
             panic("Don't know how to parse "+st.cur.String())
@@ -163,7 +163,7 @@ func ParseSt_Table(st *ParseSt) StateFn {
                 st.next()
                 return ParseSt_Init
             case TableSeparator:
-                st.output <- Block{kind:BlkTableRow}
+                st.output <- Block{Kind:BlkTableRow}
                 offset := 1
                 for i:=0; i<len(st.tabColumns); i++ {
                     if st.cur.body[offset+st.tabColumns[i]]!='+' {
@@ -171,7 +171,7 @@ func ParseSt_Table(st *ParseSt) StateFn {
                                            i,st.tabColumns, st.cur.body[:offset+st.tabColumns[i]+1])
                         panic(msg)
                     }
-                    st.output <- Block{kind:BlkTableCell,body:rowCells[i]}
+                    st.output <- Block{Kind:BlkTableCell,Body:rowCells[i]}
                     offset += st.tabColumns[i]+1
                 }
                 for i:=0;i<len(rowCells);i++ {
@@ -200,7 +200,7 @@ func ParseSt_Numbered(st *ParseSt) StateFn {
     dbg(st)
     switch st.cur.kind {
         case Numbered:
-            st.output <- Block{kind:BlkNumbered,body:st.body}
+            st.output <- Block{Kind:BlkNumbered,Body:st.body}
             st.body   = st.cur.body
             st.indent = len(st.cur.marker)
             st.next()
@@ -211,16 +211,16 @@ func ParseSt_Numbered(st *ParseSt) StateFn {
             st.next()
             return ParseSt_Numbered
         case Blank:
-            st.output <- Block{kind:BlkNumbered,body:st.body}
+            st.output <- Block{Kind:BlkNumbered,Body:st.body}
             st.next()
             st.indent = -1
             return ParseSt_Init
         case EndLongform:
             st.next()
-            st.output <- Block{kind:BlkEndLongform}
+            st.output <- Block{Kind:BlkEndLongform}
             return ParseSt_Init
         case EOF:
-            st.output <- Block{kind:BlkNumbered,body:st.body}
+            st.output <- Block{Kind:BlkNumbered,Body:st.body}
             return nil
         default: panic("Can't continue numbers with "+string(st.cur.kind))
     }
@@ -231,7 +231,7 @@ func ParseSt_Bulleted(st *ParseSt) StateFn {
     dbg(st)
     switch st.cur.kind {
         case Bulleted:
-            st.output <- Block{kind:BlkBulleted,body:st.body}
+            st.output <- Block{Kind:BlkBulleted,Body:st.body}
             st.body   = st.cur.body
             st.indent = len(st.cur.marker)
             st.next()
@@ -242,16 +242,16 @@ func ParseSt_Bulleted(st *ParseSt) StateFn {
             st.next()
             return ParseSt_Bulleted
         case Blank:
-            st.output <- Block{kind:BlkBulleted,body:st.body}
+            st.output <- Block{Kind:BlkBulleted,Body:st.body}
             st.next()
             st.indent = -1
             return ParseSt_Init
         case EndLongform:
             st.next()
-            st.output <- Block{kind:BlkEndLongform}
+            st.output <- Block{Kind:BlkEndLongform}
             return ParseSt_Init
         case EOF:
-            st.output <- Block{kind:BlkBulleted,body:st.body}
+            st.output <- Block{Kind:BlkBulleted,Body:st.body}
             return nil
         default: panic("Can't continue bullets with "+string(st.cur.kind))
     }
@@ -263,10 +263,10 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
     dirName := st.directive[3:len(st.directive)-2]
     switch string(dirName) {
         case "image":
-            st.output <- Block{kind:BlkImage,body:st.body}
+            st.output <- Block{Kind:BlkImage,Body:st.body}
             return ParseSt_Init
         case "video":
-            st.output <- Block{kind:BlkVideo,body:st.body}
+            st.output <- Block{Kind:BlkVideo,Body:st.body}
             return ParseSt_Init
         case "shell","code":
             position := []byte("default")
@@ -303,14 +303,14 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             // Missing terminating blank will not be detected - is it worth it?
             switch string(dirName) {
                 case "shell":
-                    st.output <- Block{kind:BlkShell,body:st.body,position:position,style:style}
+                    st.output <- Block{Kind:BlkShell,Body:st.body,Position:position,Style:style}
                 case "code":
-                    st.output <- Block{kind:BlkCode,body:st.body,position:position,style:style}
+                    st.output <- Block{Kind:BlkCode,Body:st.body,Position:position,Style:style}
             }
             st.indent = -1
             return ParseSt_Init
         case "topic":
-            st.output <- Block{kind:BlkTopicBegin,body:st.body}
+            st.output <- Block{Kind:BlkTopicBegin,Body:st.body}
             if st.cur.kind!=Blank { panic("Topic requires a blank") }
             st.next()
             if st.topicIndent!=-1 { panic("Cannot nest topics") }
@@ -327,7 +327,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
                 body = append(body, st.cur.body...)
                 st.next()
             }
-            st.output <- Block{kind:BlkQuote,body:body,author:st.body}
+            st.output <- Block{Kind:BlkQuote,Body:body,Author:st.body}
             return ParseSt_Init
         default:
             panic("Unrecognised directive "+string(st.directive))
@@ -351,7 +351,7 @@ func ParseSt_Reference(st *ParseSt) StateFn {
         }
         st.next()
     }
-    st.output <- Block{kind:BlkReference,title:title,author:author,url:url,detail:detail}
+    st.output <- Block{Kind:BlkReference,Title:title,Author:author,Url:url,Detail:detail}
     return ParseSt_Init
 }
 
@@ -376,7 +376,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
             body = append(body, st.cur.body...)
             st.next()
         }
-        st.output <- Block{kind:BlkDefList,body:body,heading:heading}
+        st.output <- Block{Kind:BlkDefList,Body:body,Heading:heading}
         st.indent = -1
         return ParseSt_Init
     }
@@ -387,7 +387,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
     }
     switch st.cur.kind {
         case Blank:
-            st.output <- Block{kind:BlkParagraph,body:body}
+            st.output <- Block{Kind:BlkParagraph,Body:body}
             st.next()
             st.indent = -1
             return ParseSt_Init
@@ -404,7 +404,7 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                     }
                     st.next()
                 }
-                st.output <- Block{kind:BlkMediumHeading,body:body,style:layout}
+                st.output <- Block{Kind:BlkMediumHeading,Body:body,Style:layout}
             }
             st.indent = -1
             return ParseSt_Init
@@ -421,14 +421,17 @@ func ParseSt_InPara(st *ParseSt) StateFn {
                     }
                     st.next()
                 }
-                st.output <- Block{kind:BlkMediumHeading,body:body,style:layout}
+                st.output <- Block{Kind:BlkMediumHeading,Body:body,Style:layout}
             }
             st.indent = -1
             return ParseSt_Init
         case EndLongform:
             st.next()
-            st.output <- Block{kind:BlkEndLongform}
+            st.output <- Block{Kind:BlkEndLongform}
             return ParseSt_Init
+        case EOF:
+            st.output <- Block{Kind:BlkParagraph,Body:body}
+            return nil
         default:
             dbgForce(st)
             panic("Can't end a paragraph with "+string(st.cur.kind))
@@ -461,10 +464,10 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
         metadata[ strings.ToLower(atName) ] = bytes.TrimLeft(st.cur.body," ")
         st.next()
     }
-    st.output <- Block{kind:BlkBigHeading, title:body,
-                       author:metadata["author"], courseCode:metadata["coursecode"],
-                       courseName:metadata["coursename"], location:metadata["location"],
-                       date:metadata["date"], style:bytes.ToLower(metadata["style"]) }
+    st.output <- Block{Kind:BlkBigHeading, Title:body,
+                       Author:metadata["author"], CourseCode:metadata["coursecode"],
+                       CourseName:metadata["coursename"], Location:metadata["location"],
+                       Date:metadata["date"], Style:bytes.ToLower(metadata["style"]) }
     return ParseSt_Init
 }
 

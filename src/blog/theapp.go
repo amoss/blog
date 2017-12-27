@@ -35,12 +35,9 @@ func handler(out http.ResponseWriter, req *http.Request) {
         }
     }()
     switch req.URL.Path {
-        case "/page.css", "/styles.css", "/book-icon.png",
+        case "/styles.css", "/graymaster2.jpg",
              "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
-             "/SourceSansPro-Regular.otf", "/slides.css",
-             "/slides.js", "/logo.svg", "/leftarrow.svg",
-             "/rightarrow.svg", "/closearrow.svg", "/settings.svg",
-             "/fliparrow.jpg", "/flipbackarrow.jpg":
+             "/SourceSansPro-Regular.otf":
             target := "data" + req.URL.Path
             fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
             cnt,_ := ioutil.ReadFile(target)
@@ -108,7 +105,7 @@ func handler(out http.ResponseWriter, req *http.Request) {
                             if lines!=nil {
                                 fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
                                 blocks := rst.Parse(*lines)
-                                out.Write( rst.RenderHtml(blocks) )
+                                out.Write( RenderHtml(blocks) )
                                 return
                             } else {
                                 fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)

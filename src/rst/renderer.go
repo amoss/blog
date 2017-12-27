@@ -116,108 +116,108 @@ var tagNames = map[BlockE]string {
 
 func renderHtmlPage(headBlock Block, input chan Block) []byte {
     result := make([]byte, 0, 16384)
-    result = append(result, makePageHeader(string(headBlock.style))...)
+    result = append(result, makePageHeader(string(headBlock.Style))...)
     result = append(result, []byte("<div style=\"width:100%; background-color:#dddddd; padding:1rem\">")... )
     result = append(result, []byte("<h1>")... )
-    result = append(result, inlineStyles(headBlock.title)... )
+    result = append(result, inlineStyles(headBlock.Title)... )
     result = append(result, []byte("</h1>")... )
     result = append(result, []byte("<i>")... )
-    result = append(result, headBlock.author... )
+    result = append(result, headBlock.Author... )
     result = append(result, []byte("</i>")... )
     result = append(result, []byte("<p>")... )
-    result = append(result, headBlock.date... )
+    result = append(result, headBlock.Date... )
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("</div>")... )
     lastKind := BlkParagraph
     for blk := range input {
-        if tagNames[lastKind]!="" && blk.kind!=lastKind {
+        if tagNames[lastKind]!="" && blk.Kind!=lastKind {
             result = append(result, []byte("</")... )
             result = append(result, []byte(tagNames[lastKind])... )
             result = append(result, []byte(">")... )
         }
-        if tagNames[blk.kind]!="" && blk.kind!=lastKind {
+        if tagNames[blk.Kind]!="" && blk.Kind!=lastKind {
             result = append(result, []byte("<")... )
-            result = append(result, []byte(tagNames[blk.kind])... )
+            result = append(result, []byte(tagNames[blk.Kind])... )
             result = append(result, []byte(">")... )
         }
-        switch blk.kind {
+        switch blk.Kind {
             case BlkParagraph:
                 result = append(result, []byte("<p>")... )
-                result = append(result, inlineStyles(blk.body)... )
+                result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</p>")... )
             case BlkNumbered, BlkBulleted:
                 result = append(result, []byte("<li>")... )
-                result = append(result, inlineStyles(blk.body)... )
+                result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</li>")... )
             case BlkMediumHeading:
                 result = append(result, []byte("<h1>")... )
-                result = append(result, inlineStyles(blk.body)... )
+                result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</h1>")... )
             case BlkSmallHeading:
                 result = append(result, []byte("<h2>")... )
-                result = append(result, inlineStyles(blk.body)... )
+                result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</h2>")... )
             case BlkShell:
                 result = append(result, []byte("<div class=\"shell\">")... )
-                result = append(result, []byte(html.EscapeString(string(blk.body)))... )
+                result = append(result, []byte(html.EscapeString(string(blk.Body)))... )
                 result = append(result, []byte("</div>")... )
             case BlkCode:
-                escaped := html.EscapeString(string(blk.body))
+                escaped := html.EscapeString(string(blk.Body))
                 fmt.Println(escaped)
                 result = append(result, []byte("<div class=\"code\">")... )
                 result = append(result, []byte(escaped)... )
                 result = append(result, []byte("</div>")... )
             case BlkTopicBegin:
                 result = append(result, []byte("<div class=\"Scallo\"><div class=\"ScalloHd\">")... )
-                result = append(result, inlineStyles(blk.body)... )
+                result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</div>")...)
             case BlkTopicEnd:
                 result = append(result, []byte("</div>")... )
             case BlkQuote:
                 result = append(result, []byte("<div class=\"quoteinside\"><div class=\"quotebegin\">&#8220;</div>")... )
-                result = append(result, inlineStyles(blk.body)... )
-                if len(blk.author)>0 {
+                result = append(result, inlineStyles(blk.Body)... )
+                if len(blk.Author)>0 {
                     result = append(result, []byte("<br/>--- ")... )
-                    result = append(result, blk.author... )
+                    result = append(result, blk.Author... )
                 }
                 result = append(result, []byte("<div class=\"quoteend\">&#8221;</div></div>\n")... )
             case BlkImage:
                 result = append(result, []byte("<img src=\"")...)
-                result = append(result, blk.body... )
+                result = append(result, blk.Body... )
                 result = append(result, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/>")...)
             case BlkVideo:
                 result = append(result, []byte("<video width=\"100%%\" style=\"max-width:100%% max-height:95%%\" controls>\n")... )
                 result = append(result, []byte("<source src=\"")... )
-                result = append(result, blk.body... )
+                result = append(result, blk.Body... )
                 result = append(result, []byte(".webm\" type=\"video/webm;\">")...)
                 result = append(result, []byte("<source src=\"")... )
-                result = append(result, blk.body... )
+                result = append(result, blk.Body... )
                 result = append(result, []byte(".mov\" type=\"video/quicktime;\">")...)
                 result = append(result, []byte("</video>")...)
             case BlkReference:
                 result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"/book-icon.png\"/></td>\n<td><a href=\"")...)
-                result = append(result, blk.url... )
+                result = append(result, blk.Url... )
                 result = append(result, []byte("\">")...)
-                result = append(result, blk.title... )
+                result = append(result, blk.Title... )
                 result = append(result, []byte("</a></td></tr><tr><td><i>")...)
-                result = append(result, blk.author... )
+                result = append(result, blk.Author... )
                 result = append(result, []byte("</i></td></tr>")...)
-                if blk.detail!=nil {
+                if blk.Detail!=nil {
                     result = append(result, []byte("<tr><td>")...)
-                    result = append(result, blk.detail... )
+                    result = append(result, blk.Detail... )
                     result = append(result, []byte("</td></tr>")...)
                 }
                 result = append(result, []byte("</table></div>")...)
             case BlkDefList:
                 result = append(result, []byte("<dt>")...)
-                result = append(result, blk.heading... )
+                result = append(result, blk.Heading... )
                 result = append(result, []byte("</dt><dd>")...)
-                result = append(result, inlineStyles(blk.body)... )
+                result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</dd>\n")...)
             default:
                 fmt.Println("Block:", blk)
         }
-        lastKind = blk.kind
+        lastKind = blk.Kind
     }
     result = append(result, pageFooter...)
     return result
@@ -342,119 +342,119 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     layout  := "single"
     var target MultiChanSlide
     result := make([]byte, 0, 16384)
-    result = append(result, makePageHeader(string(headBlock.style))...)
+    result = append(result, makePageHeader(string(headBlock.Style))...)
     result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button><button onclick="javascript:flipAspect()">flip aspect</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
     result = append(result, []byte(`<div id="slides">`)...)
     // Title slide
     result = append(result, []byte(`<div class="S169"><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)...)
     result = append(result, []byte("<h1>")... )
-    result = append(result, inlineStyles(headBlock.courseCode)... )
+    result = append(result, inlineStyles(headBlock.CourseCode)... )
     result = append(result, []byte("</h1>")... )
     result = append(result, []byte("<h1 style=\"margin-bottom:1.5em\">")... )
-    result = append(result, inlineStyles(headBlock.courseName)... )
+    result = append(result, inlineStyles(headBlock.CourseName)... )
     result = append(result, []byte("</h1>")... )
     result = append(result, []byte("<i>")... )
-    result = append(result, headBlock.author... )
+    result = append(result, headBlock.Author... )
     result = append(result, []byte("</i>")... )
     result = append(result, []byte("<p>")... )
-    result = append(result, headBlock.date... )
+    result = append(result, headBlock.Date... )
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("<i>")... )
-    result = append(result, headBlock.location... )
-    result = append(result, []byte("</i>")... )
+    result = append(result, headBlock.Location... )
+    result = append(result, []byte("</L>")... )
     result = append(result, []byte("<h2 style=\"margin-top:1.5em\">")... )
-    result = append(result, inlineStyles(headBlock.title)... )
+    result = append(result, inlineStyles(headBlock.Title)... )
     result = append(result, []byte("</h2>")... )
     result = append(result, []byte("</div></div>")... )
 
     lastTag  := ""
     lastKind := BlkParagraph
     for blk := range input {
-        if blk.kind!=BlkTableRow && blk.kind!=BlkTableCell && lastKind==BlkTableCell {
+        if blk.Kind!=BlkTableRow && blk.Kind!=BlkTableCell && lastKind==BlkTableCell {
             target.extendB( []byte("</tr>") )
         }
-        if lastTag!="" && tagNames[blk.kind]!=lastTag {
+        if lastTag!="" && tagNames[blk.Kind]!=lastTag {
             target.Printf( "</%s>", lastTag)
         }
-        if tagNames[blk.kind]!="" && tagNames[blk.kind]!=lastTag {
-            target.Printf( "<%s", tagNames[blk.kind] )
-            if blk.kind==BlkTableRow {
+        if tagNames[blk.Kind]!="" && tagNames[blk.Kind]!=lastTag {
+            target.Printf( "<%s", tagNames[blk.Kind] )
+            if blk.Kind==BlkTableRow {
                 target.extendB([]byte(" class=\"allborders\" width=\"100%\""))
             }
             target.extendB([]byte(">"))
         }
-        switch blk.kind {
+        switch blk.Kind {
             case BlkParagraph:
-                target.Printf("<p>%s</p>", inlineStyles(blk.body))
+                target.Printf("<p>%s</p>", inlineStyles(blk.Body))
             case BlkNumbered, BlkBulleted:
-                target.Printf("<li>%s</li>", inlineStyles(blk.body))
+                target.Printf("<li>%s</li>", inlineStyles(blk.Body))
             case BlkSmallHeading, BlkMediumHeading:
                 if target.primary!=nil && target.active=="longform" {
-                    target.Printf("<h2>%s</h2>\n",blk.body)
+                    target.Printf("<h2>%s</h2>\n",blk.Body)
                 } else {
                     if target.primary!=nil {
                         result = target.finalise(result,counter)
                         counter++
                     }
-                    layout = string(blk.style)
-                    target = makeMultiChanSlide(layout,blk.body,counter)
+                    layout = string(blk.Style)
+                    target = makeMultiChanSlide(layout,blk.Body,counter)
                 }
             case BlkShell:
                 var styles string
-                if len(blk.style)>0 {
-                    styles = " style=\"" + string(blk.style) + "\""
+                if len(blk.Style)>0 {
+                    styles = " style=\"" + string(blk.Style) + "\""
                 } else {
                     styles = ""
                 }
-                target.PrintfHL(bytes.Compare(blk.position,[]byte("highlight"))==0,
+                target.PrintfHL(bytes.Compare(blk.Position,[]byte("highlight"))==0,
                                 "<div class=\"shell\"%s>%s</div>", styles,
-                                html.EscapeString(string(blk.body)) )
+                                html.EscapeString(string(blk.Body)) )
             case BlkCode:
-                target.PrintfHL(bytes.Compare(blk.position,[]byte("highlight"))==0,
+                target.PrintfHL(bytes.Compare(blk.Position,[]byte("highlight"))==0,
                                 "<div class=\"code\">%s</div>",
-                                html.EscapeString(string(blk.body)) )
+                                html.EscapeString(string(blk.Body)) )
             case BlkTopicBegin:
                 target.Printf("<div class=\"Scallo\"><div class=\"ScalloHd\">%s</div>",
-                              inlineStyles(blk.body) )
+                              inlineStyles(blk.Body) )
             case BlkTopicEnd:
                 target.extendB( []byte("</div>") )
             case BlkQuote:
                 target.Printf("<div class=\"quoteinside\"><div class=\"quotebegin\">&#8220;</div>%s",
-                              inlineStyles(blk.body) )
-                if len(blk.author)>0 {
-                    target.Printf("<br/>--- %s", blk.author)
+                              inlineStyles(blk.Body) )
+                if len(blk.Author)>0 {
+                    target.Printf("<br/>--- %s", blk.Author)
                 }
                 target.extendB( []byte("<div class=\"quoteend\">&#8221;</div></div>\n") )
             case BlkImage:
                 target.PrintfHL(true,
                                 "<img src=\"%s\" style=\"width:100%%; max-height:100%%; object-fit:contain\"/>",
-                                blk.body)
+                                blk.Body)
                 target.PrintfLong("<img src=\"%s\" style=\"width:25rem; max-height:25rem%%; border: 1px solid black; margin:1rem; object-fit:contain\"/>",
-                                blk.body)
+                                blk.Body)
             case BlkVideo:
                 target.Printf("<video width=\"100%%\" style=\"max-width:100%%; max-height:95%%\" controls>\n" +
                               "<source src=\"%s.webm\" type=\"video/webm;\">" +
                               "<source src=\"%s.mov\" type=\"video/quicktime;\"></video>",
-                              blk.body, blk.body)
+                              blk.Body, blk.Body)
             case BlkReference:
                 target.Printf("<div class=bibitem><table style=\"width=100%%\">\n" +
                               "<tr><td rowspan=\"3\"><img src=\"/book-icon.png\"/></td>\n" +
                               "<td><a href=\"%s\">%s</a></td></tr><tr><td><i>%s</i></td></tr>",
-                              blk.url, blk.title, blk.author)
-                if blk.detail!=nil {
-                    target.Printf("<tr><td>%s</td></tr>", blk.detail)
+                              blk.Url, blk.Title, blk.Author)
+                if blk.Detail!=nil {
+                    target.Printf("<tr><td>%s</td></tr>", blk.Detail)
                 }
                 target.extendB( []byte("</table></div>") )
             case BlkDefList:
                 target.Printf("<dt>%s</dt><dd>%s</dd>\n",
-                              blk.heading, inlineStyles(blk.body))
+                              blk.Heading, inlineStyles(blk.Body))
             case BlkTableRow:
                 if lastKind==BlkTableCell {
                     target.extendB( []byte("</tr>") )
                 }
                 target.extendB( []byte("<tr>") )
             case BlkTableCell:
-                target.Printf("<td>%s</td>", inlineStyles(blk.body) )
+                target.Printf("<td>%s</td>", inlineStyles(blk.Body) )
             case BlkBeginLongform:
                 target.active = "longform"
                 target.usedLongform = true
@@ -463,8 +463,8 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
             default:
                 fmt.Println("Unknown Block:", blk)
         }
-        lastTag  = tagNames[blk.kind]
-        lastKind = blk.kind
+        lastTag  = tagNames[blk.Kind]
+        lastKind = blk.Kind
     }
     result = target.finalise(result,counter)
     result = append(result, []byte("</div></div>")...)
@@ -475,18 +475,18 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
 
 func RenderHtml(input chan Block) []byte {
     headBlock := <-input
-    if headBlock.kind!=BlkBigHeading {
+    if headBlock.Kind!=BlkBigHeading {
         var bstr string
         fmt.Sprintf(bstr,"%s",headBlock)
         panic("Parser is not sending the BigHeading first! "+bstr)
     }
-    switch string(headBlock.style) {
+    switch string(headBlock.Style) {
         case "page":
             return renderHtmlPage(headBlock,input)
         case "slides":
             return renderHtmlSlides(headBlock,input)
         default:
-            panic("Unknown style to render! "+string(headBlock.style))
+            panic("Unknown style to render! "+string(headBlock.Style))
     }
 
 }
