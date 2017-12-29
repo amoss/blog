@@ -50,6 +50,8 @@ type Block struct {
     CourseCode   []byte
     CourseName   []byte
     Location     []byte
+    Subtitle     []byte
+    Tags         []byte
 }
 
 type ParseSt struct {
@@ -467,7 +469,8 @@ func ParseSt_InHeading(st *ParseSt) StateFn {
     st.output <- Block{Kind:BlkBigHeading, Title:body,
                        Author:metadata["author"], CourseCode:metadata["coursecode"],
                        CourseName:metadata["coursename"], Location:metadata["location"],
-                       Date:metadata["date"], Style:bytes.ToLower(metadata["style"]) }
+                       Date:metadata["date"], Style:bytes.ToLower(metadata["style"]),
+                       Tags:metadata["tags"], Subtitle:metadata["subtitle"]}
     return ParseSt_Init
 }
 

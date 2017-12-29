@@ -33,6 +33,13 @@ margin: 1rem;
 opacity: 1;
 }
 
+a {
+color:#c8c7ac;
+}
+a:visited {
+color:#a8a79c;
+}
+
 .greyout {
   color: #888888;
 }
@@ -114,6 +121,7 @@ margin-right: 2px;
   color:      #72b2f9;
   background-color: #101a26;
   opacity: 0.7;
+  overflow: auto;
 }
 
 dl {
@@ -269,6 +277,10 @@ text-justify: inter-word;
 
 
 table {
-  font-size: 28px;
+font-family: 'ArbutusSlab';
+line-height: 1.3;
+  font-size: 20px;
+color:#c8c8c8; 
+width:100%;
 }
 

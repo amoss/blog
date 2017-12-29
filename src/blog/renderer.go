@@ -7,7 +7,7 @@ import (
     "rst"
 )
 
-func makePageHeader(extra string) []byte {
+func MakePageHeader() []byte {
     result := make([]byte,0,1024)
     result = append(result,[]byte(`
 <html>
@@ -91,7 +91,7 @@ var tagNames = map[rst.BlockE]string {
 
 func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
     result := make([]byte, 0, 16384)
-    result = append(result, makePageHeader(string(headBlock.Style))...)
+    result = append(result, MakePageHeader()...)
     result = append(result, []byte(`
 <div class="wblock">
     <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
@@ -146,7 +146,6 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
                 result = append(result, []byte("</div></div>")... )
             case rst.BlkCode:
                 escaped := html.EscapeString(string(blk.Body))
-                fmt.Println(escaped)
                 result = append(result, []byte("<div class=\"rblock\"><div class=\"code\">")... )
                 result = append(result, []byte(escaped)... )
                 result = append(result, []byte("</div></div>")... )
@@ -165,9 +164,9 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
                 }
                 result = append(result, []byte("<div class=\"quoteend\">&#8221;</div></div></div>\n")... )
             case rst.BlkImage:
-                result = append(result, []byte("<img src=\"")...)
+                result = append(result, []byte("<div class=\"rblock\"><div class=\"pinner\"><img src=\"")...)
                 result = append(result, blk.Body... )
-                result = append(result, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/>")...)
+                result = append(result, []byte("\" style=\"width:100%; max-height:100%; object-fit:contain\"/></div></div>")...)
             case rst.BlkVideo:
                 result = append(result, []byte("<video width=\"100%%\" style=\"max-width:100%% max-height:95%%\" controls>\n")... )
                 result = append(result, []byte("<source src=\"")... )
