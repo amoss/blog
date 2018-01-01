@@ -361,7 +361,7 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("<i>")... )
     result = append(result, headBlock.Location... )
-    result = append(result, []byte("</L>")... )
+    result = append(result, []byte("</i>")... )
     result = append(result, []byte("<h2 style=\"margin-top:1.5em\">")... )
     result = append(result, inlineStyles(headBlock.Title)... )
     result = append(result, []byte("</h2>")... )
