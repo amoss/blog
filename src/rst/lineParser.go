@@ -192,6 +192,7 @@ func ParseSt_Table(st *ParseSt) StateFn {
                 }
                 st.next()
             default:
+                fmt.Printf("State %d\n",st.cur.kind);
                 panic("Unexpected line in table")
         }
     }

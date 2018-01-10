@@ -69,7 +69,7 @@ func inlineStyles(input []byte) []byte {
                 result = append(result, []byte(`\\))`)... )
             case 'c':
                 result = append(result, []byte(`<span class="code">`)... )
-                result = append(result, input[ pair[0]+7 : pair[1]-1 ]... )
+                result = append(result, html.EscapeString(string(input[ pair[0]+7 : pair[1]-1 ]))... )
                 result = append(result, []byte(`</span>`)... )
             case 's':
                 result = append(result, []byte(`<span class="shell">`)... )
@@ -410,9 +410,14 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
                                 "<div class=\"shell\"%s>%s</div>", styles,
                                 html.EscapeString(string(blk.Body)) )
             case BlkCode:
-                target.PrintfHL(bytes.Compare(blk.Position,[]byte("highlight"))==0,
-                                "<div class=\"code\">%s</div>",
-                                html.EscapeString(string(blk.Body)) )
+                if target.primary!=nil && target.active=="longform" {
+                    target.Printf( "<div class=\"code\">%s</div>",
+                                    html.EscapeString(string(blk.Body)) )
+                } else {
+                    target.PrintfHL(bytes.Compare(blk.Position,[]byte("highlight"))==0,
+                                    "<div class=\"code\">%s</div>",
+                                    html.EscapeString(string(blk.Body)) )
+                }
             case BlkTopicBegin:
                 target.Printf("<div class=\"Scallo\"><div class=\"ScalloHd\">%s</div>",
                               inlineStyles(blk.Body) )
