@@ -7,7 +7,7 @@ import (
     "html"
 )
 
-func makePageHeader(extra string) []byte {
+func makePageHeader(extra string, insert []byte) []byte {
     result := make([]byte,0,1024)
     result = append(result,[]byte(`
 <html>
@@ -31,6 +31,7 @@ func makePageHeader(extra string) []byte {
     if extra=="slides" {
         result = append(result, []byte("<script src=\"/slides.js\" type=\"text/javascript\"></script>")...)
     }
+    result = append(result, insert...)
     result = append(result, []byte(`</head>
 <body>
 `)...)
@@ -116,7 +117,7 @@ var tagNames = map[BlockE]string {
 
 func renderHtmlPage(headBlock Block, input chan Block) []byte {
     result := make([]byte, 0, 16384)
-    result = append(result, makePageHeader(string(headBlock.Style))...)
+    result = append(result, makePageHeader(string(headBlock.Style),[]byte(""))...)
     result = append(result, []byte("<div style=\"width:100%; background-color:#dddddd; padding:1rem\">")... )
     result = append(result, []byte("<h1>")... )
     result = append(result, inlineStyles(headBlock.Title)... )
@@ -337,14 +338,14 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
 }
 
 
-func renderHtmlSlides(headBlock Block, input chan Block) []byte {
+func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []byte {
     counter := 1
     layout  := "single"
     var target MultiChanSlide
     result := make([]byte, 0, 16384)
-    result = append(result, makePageHeader(string(headBlock.Style))...)
+    result = append(result, makePageHeader(string(headBlock.Style),headerInsert)...)
     result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button><button onclick="javascript:flipAspect()">flip aspect</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
-    result = append(result, []byte(`<div id="slides">`)...)
+    result = append(result, []byte(`<div id="slides" style="margin-top:50%%; margin-bottom:50%%">`)...)
     // Title slide
     result = append(result, []byte(`<div class="S169"><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)...)
     result = append(result, []byte("<h1>")... )
@@ -471,8 +472,17 @@ func renderHtmlSlides(headBlock Block, input chan Block) []byte {
         lastTag  = tagNames[blk.Kind]
         lastKind = blk.Kind
     }
+    target.Printf("</div></div>\n")
+    target.Printf(`<div id="vidarea" style="position:fixed; left:66%%; width:34%%; height:100%%">`)
+    target.Printf(`<div id="vidholder" style="max-width:100%%; max-height:95%%; margin-top:50%%; margin-bottom:50%%">`)
+    target.Printf("<video id=\"vid\" width=\"100%%\" style=\"max-width:100%%; max-height:95%%\" controls>\n" +
+                  "<source src=\"vid.ogv\" type=\"video/ogg;\">" +
+                  "<source src=\"vid.webm\" type=\"video/webm;\">" +
+                  "<source src=\"vid.mp4\" type=\"video/mp4;\"></video>")
+                  //"<source src=\"vid.mov\" type=\"video/quicktime;\"></video>")
+    target.Printf(`</video>`)
+    target.Printf(`</div></div>`)
     result = target.finalise(result,counter)
-    result = append(result, []byte("</div></div>")...)
     result = append(result, pageFooter...)
     return result
 }
@@ -489,7 +499,26 @@ func RenderHtml(input chan Block) []byte {
         case "page":
             return renderHtmlPage(headBlock,input)
         case "slides":
-            return renderHtmlSlides(headBlock,input)
+            return renderHtmlSlides(headBlock,input,[]byte(""))
+        default:
+            panic("Unknown style to render! "+string(headBlock.Style))
+    }
+
+}
+
+
+func RenderHtmlWithHeader(input chan Block, headerInsert []byte) []byte {
+    headBlock := <-input
+    if headBlock.Kind!=BlkBigHeading {
+        var bstr string
+        fmt.Sprintf(bstr,"%s",headBlock)
+        panic("Parser is not sending the BigHeading first! "+bstr)
+    }
+    switch string(headBlock.Style) {
+        case "page":
+            return renderHtmlPage(headBlock,input)
+        case "slides":
+            return renderHtmlSlides(headBlock,input,headerInsert)
         default:
             panic("Unknown style to render! "+string(headBlock.Style))
     }
