@@ -472,17 +472,15 @@ func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []
         lastTag  = tagNames[blk.Kind]
         lastKind = blk.Kind
     }
-    target.Printf("</div></div>\n")
-    target.Printf(`<div id="vidarea" style="position:fixed; left:66%%; width:34%%; height:100%%">`)
-    target.Printf(`<div id="vidholder" style="max-width:100%%; max-height:95%%; margin-top:50%%; margin-bottom:50%%">`)
-    target.Printf("<video id=\"vid\" width=\"100%%\" style=\"max-width:100%%; max-height:95%%\" controls>\n" +
-                  "<source src=\"vid.ogv\" type=\"video/ogg;\">" +
-                  "<source src=\"vid.webm\" type=\"video/webm;\">" +
-                  "<source src=\"vid.mp4\" type=\"video/mp4;\"></video>")
-                  //"<source src=\"vid.mov\" type=\"video/quicktime;\"></video>")
-    target.Printf(`</video>`)
-    target.Printf(`</div></div>`)
     result = target.finalise(result,counter)
+    result = append(result, []byte(`
+</div><div id="vidarea" style="position:fixed; left:66%; width:34%; height:100%">
+<div id="vidholder" style="max-width:100%; max-height:95%; margin-top:50%; margin-bottom:50%">
+<video id="vid" width="100%" style="max-width:100%; max-height:95%" controls>\n
+<source src="vid.ogv" type="video/ogg;">
+<source src="vid.webm" type="video/webm;">
+<source src="vid.mp4" type="video/mp4;"></video>
+</div></div>`)...)
     result = append(result, pageFooter...)
     return result
 }
