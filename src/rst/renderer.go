@@ -371,6 +371,10 @@ func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []
     lastTag  := ""
     lastKind := BlkParagraph
     for blk := range input {
+        if LineParserDbg {
+           fmt.Printf("%29s: %s\n", "block", blk)
+
+        }
         if blk.Kind!=BlkTableRow && blk.Kind!=BlkTableCell && lastKind==BlkTableCell {
             target.extendB( []byte("</tr>") )
         }

@@ -91,7 +91,7 @@ func classify(line []byte) LineClass {
     attribute := regexp.MustCompile("^:([A-Za-z]+): ")
     a := attribute.FindSubmatch(text)
     if a!=nil {
-        return LineClass{indent,a[1],bytes.TrimLeft(text[len(a[0]):]," "),Attribute}
+        return LineClass{indent,a[1],bytes.Trim(text[len(a[0]):]," "),Attribute}
     }
 
     return LineClass{indent,nil,text,Other}
