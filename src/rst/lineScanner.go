@@ -1,5 +1,6 @@
 package rst
 import (
+    "runtime/debug"
     "os"
     "bufio"
     "regexp"
@@ -75,6 +76,9 @@ func classify(line []byte) LineClass {
     if c!=nil {
         return LineClass{indent,nil,text,Comment}
     }
+    if len(text)==1 {
+      return LineClass{indent,nil,text,Other}
+    }
     if bytes.Compare(text[0:2],[]byte("* "))==0 {
       return LineClass{indent, []byte("* "), text[2:], Bulleted}
     }
@@ -102,10 +106,11 @@ func LineScanner(path string) *chan LineClass {
     scanner := bufio.NewScanner(fd)
     go func() {
         defer func() {
+            output <- LineClass{kind:EOF}
             close(output)
             r := recover()
             if r!=nil {
-                fmt.Println("Scanner panic!",r)
+                fmt.Printf("Scanner panic! %s\n %s\n",r,debug.Stack() )
             }
         }()
 
