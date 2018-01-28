@@ -16,6 +16,7 @@ func makePageHeader(extra string, insert []byte) []byte {
   MathJax.Hub.Config({
     tex2jax: {
       inlineMath: [ ["\\\\((","\\\\))"] ],
+      displayMath: [ ["$math$", "$math$"] ],
       processEscapes: true
     }
   });
