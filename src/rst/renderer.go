@@ -14,14 +14,14 @@ func makePageHeader(extra string, insert []byte) []byte {
 <head>
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [ ["\\\\((","\\\\))"] ],
+    tex2jax: 
+      inlineMath: [ ["\\((","\\))"] ],
       displayMath: [ ["$math$", "$math$"] ],
       processEscapes: true
     }
   });
 </script>
-<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+<script src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 <link href="/styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
     if extra != "" {
