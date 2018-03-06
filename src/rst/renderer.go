@@ -13,13 +13,6 @@ func makePageHeader(extra string, insert []byte) []byte {
 <html>
 <head>
 <script src="/MathJax/MathJax.js" type="text/javascript">
-  MathJax.Hub.Config({
-    tex2jax: 
-      inlineMath: [ ["\\((","\\))"] ],
-      displayMath: [ ["$math$", "$math$"] ],
-      processEscapes: true
-    }
-  });
 </script>
 <link href="/styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
