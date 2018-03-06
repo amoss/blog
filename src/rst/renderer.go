@@ -12,6 +12,18 @@ func makePageHeader(extra string, insert []byte) []byte {
     result = append(result,[]byte(`
 <html>
 <head>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
 <script src="/MathJax/MathJax.js" type="text/javascript">
 </script>
 <link href="/styles.css" type="text/css" rel="stylesheet"></link>
