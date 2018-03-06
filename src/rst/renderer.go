@@ -24,7 +24,7 @@ func makePageHeader(extra string, insert []byte) []byte {
     "HTML-CSS": { availableFonts: ["TeX"] }
   });
 </script>
-<script src="/MathJax/MathJax.js" type="text/javascript">
+<script src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript">
 </script>
 <link href="/styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
