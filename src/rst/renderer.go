@@ -21,7 +21,7 @@ func makePageHeader(extra string, insert []byte) []byte {
     }
   });
 </script>
-<script src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+<script src="/MathJax/MathJax.js" type="text/javascript"></script>
 <link href="/styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
     if extra != "" {
