@@ -17,8 +17,8 @@ func makePageHeader(extra string, insert []byte) []byte {
     extensions: ["tex2jax.js"],
     jax: ["input/TeX", "output/HTML-CSS"],
     tex2jax: {
-      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      inlineMath: [ ['$math','math$'], ["\\((","\\))"] ],
+      displayMath: [ ['$math$','$math$'], ["\\[[","\\]]"] ],
       processEscapes: true
     },
     "HTML-CSS": { availableFonts: ["TeX"] }
