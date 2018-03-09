@@ -10,7 +10,7 @@ import (
 func MakePageHeader(depth int) []byte {
     result := make([]byte,0,1024)
     backToRoot := make([]byte,0,128)
-    for(i := 0; i<depth; i++) {
+    for i := 0; i<depth; i++ {
       backToRoot = append(backToRoot,[]byte("../"))
     }
     result = append(result,[]byte(`
