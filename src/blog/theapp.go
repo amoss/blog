@@ -69,7 +69,7 @@ func renderIndex(posts []Post) []byte {
         return posts[i].Date.After(posts[j].Date)
     }
     sort.Slice(posts,dates)
-    result = append(result, MakePageHeader()...)
+    result = append(result, MakePageHeader(0)...)
     result = append(result, []byte(`
 <div class="wblock">
     <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
