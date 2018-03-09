@@ -11,19 +11,19 @@ func MakePageHeader(depth int) []byte {
     result := make([]byte,0,1024)
     backToRoot := make([]byte,0,128)
     for i := 0; i<depth; i++ {
-      backToRoot = append(backToRoot,[]byte("../"))
+      backToRoot = append(backToRoot,[]byte("../")...)
     }
     result = append(result,[]byte(`
 <html>
 <head>
-<link href="`)
+<link href="`)...)
     result = append(result,backToRoot...)
-    result = append(`styles.css" type="text/css" rel="stylesheet"></link>
+    result = append(result,[]byte(`styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
     result = append(result, []byte(`</head>
-<body style="padding:0; margin:0" background="`)
+<body style="padding:0; margin:0" background="`)...)
     result = append(result,backToRoot...)
-    result = append(`graymaster2.jpg">
+    result = append(result,[]byte(`graymaster2.jpg">
 </div>
 <div style="position:fixed; width:62%; left:19%; top:0; height:100%; border: 1px dashed #333333">
 </div>
