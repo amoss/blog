@@ -204,6 +204,15 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
                 result = append(result, []byte("</dt><dd>")...)
                 result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</dd>\n")...)
+            case rst.BlkTableRow:
+                if lastKind==rst.BlkTableCell {
+                    result = append( result, []byte("</tr>")... )
+                }
+                result = append(result, []byte("<tr>")... )
+            case rst.BlkTableCell:
+                result = append(result, []byte("<td>")... )
+                result = append(result, inlineStyles(blk.Body)... )
+                result = append(result, []byte("/<td>")... )
             default:
                 fmt.Println("Block:", blk)
         }
