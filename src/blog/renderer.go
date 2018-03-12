@@ -121,12 +121,12 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
     result = append(result, []byte("</div>")... )
     lastKind := rst.BlkParagraph
     for blk := range input {
-        if tagNames[lastKind]!="" && blk.Kind!=lastKind {
+        if tagNames[lastKind]!="" && tagNames[blk.Kind]!=tagNames[lastKind] {
             result = append(result, []byte("</")... )
             result = append(result, []byte(tagNames[lastKind])... )
             result = append(result, []byte("></div></div>")... )
         }
-        if tagNames[blk.Kind]!="" && blk.Kind!=lastKind {
+        if tagNames[blk.Kind]!="" && tagNames[blk.Kind]!=tagNames[lastKind] {
             result = append(result, []byte("<div class=\"pblock\"><div class=\"pinner\"><")... )
             result = append(result, []byte(tagNames[blk.Kind])... )
             result = append(result, []byte(">")... )
