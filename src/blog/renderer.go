@@ -212,7 +212,7 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
             case rst.BlkTableCell:
                 result = append(result, []byte("<td>")... )
                 result = append(result, inlineStyles(blk.Body)... )
-                result = append(result, []byte("/<td>")... )
+                result = append(result, []byte("</td>")... )
             default:
                 fmt.Println("Block:", blk)
         }
