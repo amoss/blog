@@ -7,15 +7,23 @@ import (
     "rst"
 )
 
-func MakePageHeader() []byte {
+func MakePageHeader(depth int) []byte {
     result := make([]byte,0,1024)
+    backToRoot := make([]byte,0,128)
+    for i := 0; i<depth; i++ {
+      backToRoot = append(backToRoot,[]byte("../")...)
+    }
     result = append(result,[]byte(`
 <html>
 <head>
-<link href="/styles.css" type="text/css" rel="stylesheet"></link>
+<link href="`)...)
+    result = append(result,backToRoot...)
+    result = append(result,[]byte(`styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
     result = append(result, []byte(`</head>
-<body style="padding:0; margin:0" background="/graymaster2.jpg">
+<body style="padding:0; margin:0" background="`)...)
+    result = append(result,backToRoot...)
+    result = append(result,[]byte(`graymaster2.jpg">
 </div>
 <div style="position:fixed; width:62%; left:19%; top:0; height:100%; border: 1px dashed #333333">
 </div>
@@ -91,7 +99,7 @@ var tagNames = map[rst.BlockE]string {
 
 func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
     result := make([]byte, 0, 16384)
-    result = append(result, MakePageHeader()...)
+    result = append(result, MakePageHeader(1)...)
     result = append(result, []byte(`
 <div class="wblock">
     <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
@@ -113,12 +121,12 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
     result = append(result, []byte("</div>")... )
     lastKind := rst.BlkParagraph
     for blk := range input {
-        if tagNames[lastKind]!="" && blk.Kind!=lastKind {
+        if tagNames[lastKind]!="" && tagNames[blk.Kind]!=tagNames[lastKind] {
             result = append(result, []byte("</")... )
             result = append(result, []byte(tagNames[lastKind])... )
             result = append(result, []byte("></div></div>")... )
         }
-        if tagNames[blk.Kind]!="" && blk.Kind!=lastKind {
+        if tagNames[blk.Kind]!="" && tagNames[blk.Kind]!=tagNames[lastKind] {
             result = append(result, []byte("<div class=\"pblock\"><div class=\"pinner\"><")... )
             result = append(result, []byte(tagNames[blk.Kind])... )
             result = append(result, []byte(">")... )
@@ -196,6 +204,15 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
                 result = append(result, []byte("</dt><dd>")...)
                 result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</dd>\n")...)
+            case rst.BlkTableRow:
+                if lastKind==rst.BlkTableCell {
+                    result = append( result, []byte("</tr>")... )
+                }
+                result = append(result, []byte("<tr>")... )
+            case rst.BlkTableCell:
+                result = append(result, []byte("<td>")... )
+                result = append(result, inlineStyles(blk.Body)... )
+                result = append(result, []byte("</td>")... )
             default:
                 fmt.Println("Block:", blk)
         }
