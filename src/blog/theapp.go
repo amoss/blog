@@ -191,32 +191,14 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
                     case ".html":
                         if strings.HasSuffix(req.URL.Path,"index.html") {
                             dir := path.Dir(req.URL.Path)
-                            fmt.Printf("Index detected %s <- %s\n",dir,req.URL.Path)
-                            inside  := "data" + dir + "/index.rst"
-                            outside := "data" + dir + ".rst"
-                            insideFI, insideErr := os.Stat(inside)
-                            fmt.Printf("%s: %s, %s\n", inside, insideFI, insideErr)
-                            outsideFI, outsideErr := os.Stat(outside)
-                            fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
-                            if insideFI==nil && outsideFI==nil {
+                            filename := "data" + dir + ".rst"
+                            outsideFI, outsideErr := os.Stat(filename)
+                            //fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
+                            if outsideFI==nil {
                                 out.WriteHeader(404)
-                                fmt.Printf("%29s: Can't resolve %s or %s\n",
-                                           "handler", inside, outside)
+                                fmt.Printf("%29s: Can't resolve %s\n", "handler", filename)
                                 out.Write( []byte("File not found") )
                                 return
-                            }
-                            if insideFI!=nil && outsideFI!=nil {
-                                out.WriteHeader(404)
-                                fmt.Printf("%29s: Ambiguous! Can resolve %s AND %s\n",
-                                           "handler", inside, outside)
-                                out.Write( []byte("File not found (ambiguous configuration)") )
-                                return
-                            }
-                            var filename string
-                            if insideFI!=nil {
-                                filename = inside
-                            } else {
-                                filename = outside
                             }
                             lines  := rst.LineScanner(filename)
                             if lines!=nil {
