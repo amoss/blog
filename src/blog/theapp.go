@@ -62,7 +62,7 @@ func ScanPosts() []Post {
     return posts
 }
 
-func renderIndex(posts []Post) []byte {
+func renderIndex(posts []Post, showDrafts bool) []byte {
     result := make([]byte, 0, 16384)
     dates :=  func(i,j int) bool {
         // Sort is in reverse order so newest posts are first
@@ -145,10 +145,15 @@ func renderIndex(posts []Post) []byte {
 }
 
 func privateHandler(out http.ResponseWriter, req *http.Request) {
-  if req.Header["Eppn"][0] == "awm@bth.se" {
-    out.Write([]byte("<html><body>Totally authorized</body></html>"))
-  } else {
-    out.Write([]byte("<html><body>Totally NOT authorized</body></html>"))
+  if req.Header["Eppn"][0] != "awm@bth.se" {
+    http.Error(out, errors.New("There is a charm about the forbidden that makes it unspeakably desirable - Mark Twain.").Error(),
+               http.StatusForbidden)
+    return
+  }
+  switch req.URL.Path {
+    case "/private/index.html":
+      posts := ScanPosts()
+      out.Write( renderIndex(posts,true) )
   }
 }
 
@@ -156,7 +161,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
     switch req.URL.Path {
         case "/index.html":
             posts := ScanPosts()
-            out.Write( renderIndex(posts) )
+            out.Write( renderIndex(posts,false) )
         default:
             if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
                 http.Redirect(out,req,req.URL.Path+"index.html",302)
