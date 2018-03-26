@@ -31,7 +31,7 @@ type Post struct {
     Subtitle    []byte
 }
 
-func ScanPosts() []Post {
+func ScanPosts(showDrafts bool) []Post {
     files, err := ioutil.ReadDir("data")
     if err!=nil {
         return make([]Post,0,0)
@@ -45,7 +45,7 @@ func ScanPosts() []Post {
                 headBlock := <-blocks
                 for x := range blocks { x = x}
                 pTime,err := time.Parse("2006-01-02",string(headBlock.Date))
-                if err!=nil {
+                if err!=nil && showDrafts {
                     pTime = time.Now()       // Push "Draft" posts to top
                 }
                 bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
@@ -150,7 +150,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
       return
   }
   if req.URL.Path=="/private/index.html" {
-      posts := ScanPosts()
+      posts := ScanPosts(true)
       out.Write( renderIndex(posts,1,true) )
       return
   }
@@ -159,7 +159,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
   if req.URL.Path=="/index.html" {
-      posts := ScanPosts()
+      posts := ScanPosts(false)
       out.Write( renderIndex(posts,0,false) )
       return
   }
