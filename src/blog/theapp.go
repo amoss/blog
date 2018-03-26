@@ -252,6 +252,8 @@ func wrapper(handler http.Handler) http.Handler {
         }
     }()
     handler.ServeHTTP(out,req)
+    t2 := time.Now()
+    fmt.Printf("%29s: Request serviced in %s\n","wrapper",t2.Sub(t))
   })
 }
 
