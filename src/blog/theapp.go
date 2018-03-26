@@ -45,8 +45,12 @@ func ScanPosts(showDrafts bool) []Post {
                 headBlock := <-blocks
                 for x := range blocks { x = x}
                 pTime,err := time.Parse("2006-01-02",string(headBlock.Date))
-                if err!=nil && showDrafts {
-                    pTime = time.Now()       // Push "Draft" posts to top
+                if err!=nil {
+                    if showDrafts {
+                      pTime = time.Now()       // Push "Draft" posts to top
+                    } else {
+                      continue                 // Drop Draft posts
+                    }
                 }
                 bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
                 linkName := []byte( bName + "/index.html" )
