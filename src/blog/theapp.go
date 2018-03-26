@@ -146,14 +146,18 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
 
 func privateHandler(out http.ResponseWriter, req *http.Request) {
   if req.Header["Eppn"][0] != "awm@bth.se" {
-    http.Error(out, errors.New("There is a charm about the forbidden that makes it unspeakably desirable - Mark Twain.").Error(),
-               http.StatusForbidden)
-    return
+      http.Error(out, errors.New("There is a charm about the forbidden that makes it unspeakably desirable - Mark Twain.").Error(),
+                 http.StatusForbidden)
+      return
   }
-  switch req.URL.Path {
-    case "/private/index.html":
+  if req.URL.Path=="/index.html" {
       posts := ScanPosts()
       out.Write( renderIndex(posts,1,true) )
+      return
+  }
+  if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
+      http.Redirect(out,req,req.URL.Path+"index.html",302)
+      return
   }
 }
 
