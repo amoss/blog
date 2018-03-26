@@ -5,6 +5,7 @@ import (
     "regexp"
     "html"
     "rst"
+    "time"
 )
 
 func MakePageHeader(depth int) []byte {
@@ -107,6 +108,11 @@ func renderHtml(headBlock rst.Block, input chan rst.Block, showDrafts bool) []by
     </div>
 </div>
 `)...)
+
+    _,err := time.Parse("2006-01-02",string(headBlock.Date))
+    if err!=nil && !showDrafts {
+      return []byte("Good things comes to those who wait.")
+    }
 
     result = append(result, []byte("<div class=\"rblock\" style=\"color:#c8c7ac;text-align:right\">")... )
     result = append(result, []byte("<h2 style=\"text-align:right\">")... )
