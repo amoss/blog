@@ -144,33 +144,19 @@ func renderIndex(posts []Post) []byte {
     return result
 }
 
-func handler(out http.ResponseWriter, req *http.Request) {
-    t := time.Now()
-    fmt.Println(t.Format(time.RFC1123),"Request", *req)
-    defer func() {
-        r:= recover()
-        if r!=nil {
-            fmt.Printf("Panic during page handler! %s %s\n", r, debug.Stack() )
-            http.Error(out, errors.New("Something went wrong :(").Error(),
-                       http.StatusInternalServerError)
-        }
-    }()
+func privateHandler(out http.ResponseWriter, req *http.Request) {
+  if req.Header["Eppn"][0] == "awm@bth.se" {
+    out.Write([]byte("<html><body>Totally authorized</body></html>"))
+  } else {
+    out.Write([]byte("<html><body>Totally NOT authorized</body></html>"))
+  }
+}
+
+func publicHandler(out http.ResponseWriter, req *http.Request) {
     switch req.URL.Path {
         case "/index.html":
             posts := ScanPosts()
             out.Write( renderIndex(posts) )
-        case "/styles.css", "/graymaster2.jpg",
-             "/Basic-Regular.ttf", "/Inconsolata-Regular.ttf",
-             "/SourceSansPro-Regular.otf",
-             "/ArbutusSlab-Regular.ttf",  "/Rasa-Medium.ttf",        "/Yrsa-Medium.ttf",
-             "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf":
-            target := "data" + req.URL.Path
-            fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
-            cnt,_ := ioutil.ReadFile(target)
-            switch path.Ext(req.URL.Path) {
-                case ".svg": out.Header().Set("Content-type", "image/svg+xml")
-            }
-            out.Write(cnt)
         default:
             if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
                 http.Redirect(out,req,req.URL.Path+"index.html",302)
@@ -248,10 +234,45 @@ func handler(out http.ResponseWriter, req *http.Request) {
     }
 }
 
+func wrapper(handler http.Handler) http.Handler {
+  return http.HandlerFunc( func(out http.ResponseWriter, req *http.Request) {
+    t := time.Now()
+    fmt.Println(t.Format(time.RFC1123),"Request", *req)
+    defer func() {
+        r:= recover()
+        if r!=nil {
+            fmt.Printf("Panic during page handler! %s %s\n", r, debug.Stack() )
+            http.Error(out, errors.New("Something went wrong :(").Error(),
+                       http.StatusInternalServerError)
+        }
+    }()
+    handler.ServeHTTP(out,req)
+  })
+}
 
+
+func staticHandler(out http.ResponseWriter, req *http.Request) {
+  target := "data" + req.URL.Path
+  fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
+  cnt,_ := ioutil.ReadFile(target)
+  /* No svg in the blog whitelist
+  switch path.Ext(req.URL.Path) {
+      case ".svg": out.Header().Set("Content-type", "image/svg+xml")
+  } */
+  out.Write(cnt)
+}
+
+var whitelist = []string{ "/styles.css", "/graymaster2.jpg", "/Basic-Regular.ttf",
+                "/Inconsolata-Regular.ttf", "/SourceSansPro-Regular.otf",
+                "/ArbutusSlab-Regular.ttf", "/Rasa-Medium.ttf", "/Yrsa-Medium.ttf",
+                "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf" }
 func main() {
-    http.HandleFunc("/", handler)
-    err := http.ListenAndServe(":8080", nil)
+    http.HandleFunc("/", publicHandler)
+    http.HandleFunc("/private/", privateHandler)
+    for _,p := range whitelist {
+      http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
+    }
+    err := http.ListenAndServe(":80", nil)
     if err != nil {
         fmt.Printf("Error creating server: %s\n", err)
     }
