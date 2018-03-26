@@ -62,14 +62,14 @@ func ScanPosts() []Post {
     return posts
 }
 
-func renderIndex(posts []Post, showDrafts bool) []byte {
+func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
     result := make([]byte, 0, 16384)
     dates :=  func(i,j int) bool {
         // Sort is in reverse order so newest posts are first
         return posts[i].Date.After(posts[j].Date)
     }
     sort.Slice(posts,dates)
-    result = append(result, MakePageHeader(0)...)
+    result = append(result, MakePageHeader(levelsDeep)...)
     result = append(result, []byte(`
 <div class="wblock">
     <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
@@ -153,7 +153,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
   switch req.URL.Path {
     case "/private/index.html":
       posts := ScanPosts()
-      out.Write( renderIndex(posts,true) )
+      out.Write( renderIndex(posts,1,true) )
   }
 }
 
@@ -161,7 +161,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
     switch req.URL.Path {
         case "/index.html":
             posts := ScanPosts()
-            out.Write( renderIndex(posts,false) )
+            out.Write( renderIndex(posts,0,false) )
         default:
             if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
                 http.Redirect(out,req,req.URL.Path+"index.html",302)
