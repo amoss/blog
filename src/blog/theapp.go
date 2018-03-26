@@ -150,7 +150,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
                  http.StatusForbidden)
       return
   }
-  if req.URL.Path=="/index.html" {
+  if req.URL.Path=="/private/index.html" {
       posts := ScanPosts()
       out.Write( renderIndex(posts,1,true) )
       return
