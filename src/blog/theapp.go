@@ -196,7 +196,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
                             //fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
                             if outsideFI==nil {
                                 out.WriteHeader(404)
-                                fmt.Printf("%29s: Can't resolve %s\n", "handler", filename)
+                                fmt.Printf("%29s: Can't resolve %s because %s\n", "handler", filename, outsideErr)
                                 out.Write( []byte("File not found") )
                                 return
                             }
