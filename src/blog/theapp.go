@@ -204,7 +204,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
                             if lines!=nil {
                                 fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
                                 blocks := rst.Parse(*lines)
-                                out.Write( RenderHtml(blocks) )
+                                out.Write( RenderHtml(blocks,false) )
                                 return
                             } else {
                                 fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)

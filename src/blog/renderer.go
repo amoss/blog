@@ -97,7 +97,7 @@ var tagNames = map[rst.BlockE]string {
 
 
 
-func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
+func renderHtml(headBlock rst.Block, input chan rst.Block, showDrafts bool) []byte {
     result := make([]byte, 0, 16384)
     result = append(result, MakePageHeader(1)...)
     result = append(result, []byte(`
@@ -222,13 +222,13 @@ func renderHtml(headBlock rst.Block, input chan rst.Block) []byte {
     return result
 }
 
-func RenderHtml(input chan rst.Block) []byte {
+func RenderHtml(input chan rst.Block, showDrafts bool) []byte {
     headBlock := <-input
     if headBlock.Kind!=rst.BlkBigHeading {
         var bstr string
         fmt.Sprintf(bstr,"%s",headBlock)
         panic("Parser is not sending the BigHeading first! "+bstr)
     }
-    return renderHtml(headBlock,input)
+    return renderHtml(headBlock,input,showDrafts)
 }
 
