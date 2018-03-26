@@ -254,7 +254,7 @@ func staticHandler(out http.ResponseWriter, req *http.Request) {
 var whitelist = []string{ "/styles.css", "/graymaster2.jpg", "/Basic-Regular.ttf",
                 "/Inconsolata-Regular.ttf", "/SourceSansPro-Regular.otf",
                 "/ArbutusSlab-Regular.ttf", "/Rasa-Medium.ttf", "/Yrsa-Medium.ttf",
-                "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf" }
+                "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf", "Rasa-Regular.ttf" }
 func main() {
     http.Handle("/", wrapper(http.HandlerFunc(publicHandler)))
     http.Handle("/private/", wrapper(http.HandlerFunc(privateHandler)))
