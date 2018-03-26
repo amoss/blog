@@ -197,7 +197,7 @@ var reqPath string
     } else if path.Ext(reqPath)==".html" {
 
         if strings.HasSuffix(req.URL.Path,"index.html") {
-            dir := path.Dir(req.URL.Path)
+            dir := path.Dir(reqPath)
             filename := "data" + dir + ".rst"
             outsideFI, outsideErr := os.Stat(filename)
             //fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
