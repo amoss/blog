@@ -100,7 +100,11 @@ var tagNames = map[rst.BlockE]string {
 
 func renderHtml(headBlock rst.Block, input chan rst.Block, showDrafts bool) []byte {
     result := make([]byte, 0, 16384)
-    result = append(result, MakePageHeader(1)...)
+    if showDrafts {
+        result = append(result, MakePageHeader(2)...)
+    } else {
+        result = append(result, MakePageHeader(1)...)
+    }
     result = append(result, []byte(`
 <div class="wblock">
     <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
