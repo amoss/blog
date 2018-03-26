@@ -175,7 +175,7 @@ func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool) 
 
 var reqPath string
     if showDrafts {
-      reqPath = req.URL.Path[9:]     // Eat "/private/"
+      reqPath = req.URL.Path[8:]     // Eat "/private/" -> "/"
     } else {
       reqPath = req.URL.Path
     }
