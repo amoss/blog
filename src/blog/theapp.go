@@ -272,7 +272,7 @@ func main() {
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
     }
-    err := http.ListenAndServe(":80", nil)
+    err := http.ListenAndServe(":8080", nil)
     if err != nil {
         fmt.Printf("Error creating server: %s\n", err)
     }
