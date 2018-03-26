@@ -267,8 +267,8 @@ var whitelist = []string{ "/styles.css", "/graymaster2.jpg", "/Basic-Regular.ttf
                 "/ArbutusSlab-Regular.ttf", "/Rasa-Medium.ttf", "/Yrsa-Medium.ttf",
                 "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf" }
 func main() {
-    http.HandleFunc("/", publicHandler)
-    http.HandleFunc("/private/", privateHandler)
+    http.Handle("/", wrapper(http.HandlerFunc(publicHandler)))
+    http.Handle("/private/", wrapper(http.HandlerFunc(privateHandler)))
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
     }
