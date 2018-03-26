@@ -45,17 +45,16 @@ func ScanPosts() []Post {
                 headBlock := <-blocks
                 for x := range blocks { x = x}
                 pTime,err := time.Parse("2006-01-02",string(headBlock.Date))
-                if err!=nil{
-                    fmt.Printf("Cannot parse %s date: %s\n",entry.Name(), headBlock.Date)
-                }else{
-                    bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
-                    linkName := []byte( bName + "/index.html" )
-                    posts = append(posts, Post{Filename:linkName,
-                                               Title:headBlock.Title,
-                                               Date:pTime,
-                                               Tags:headBlock.Tags,
-                                               Subtitle:headBlock.Subtitle})
+                if err!=nil {
+                    pTime = time.Now()       // Push "Draft" posts to top
                 }
+                bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
+                linkName := []byte( bName + "/index.html" )
+                posts = append(posts, Post{Filename:linkName,
+                                           Title:headBlock.Title,
+                                           Date:pTime,
+                                           Tags:headBlock.Tags,
+                                           Subtitle:headBlock.Subtitle})
             }
         }
     }
