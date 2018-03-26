@@ -253,7 +253,7 @@ func wrapper(handler http.Handler) http.Handler {
     }()
     handler.ServeHTTP(out,req)
     t2 := time.Now()
-    fmt.Printf("%29s: Request serviced in %.1fms\n","wrapper",float64(t2.Sub(t)/time.Millisecond))
+    fmt.Printf("%29s: Request serviced in %.1fms\n","wrapper",float64(t2.Sub(t))/float64(time.Millisecond))
   })
 }
 
