@@ -21,6 +21,7 @@ var mimeTypes = map[string]string {
     ".webm": "video/webm",
     ".mov":  "video/quicktime",
     ".svg":  "image/svg+xml",
+    ".png":  "image/png",
 }
 
 type Post struct {
