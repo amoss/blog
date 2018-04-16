@@ -26,15 +26,15 @@ func makePageHeader(extra string, insert []byte) []byte {
 </script>
 <script src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript">
 </script>
-<link href="/styles.css" type="text/css" rel="stylesheet"></link>
+<link href="../styles.css" type="text/css" rel="stylesheet"></link>
 `)...)
     if extra != "" {
         result = append(result, []byte("<link href=\"")...)
-        result = append(result, []byte("/"+extra)...)
+        result = append(result, []byte("../"+extra)...)
         result = append(result, []byte(".css\" type=\"text/css\" rel=\"stylesheet\"></link>\n")...)
     }
     if extra=="slides" {
-        result = append(result, []byte("<script src=\"/slides.js\" type=\"text/javascript\"></script>")...)
+        result = append(result, []byte("<script src=\"../slides.js\" type=\"text/javascript\"></script>")...)
     }
     result = append(result, insert...)
     result = append(result, []byte(`</head>
@@ -67,7 +67,7 @@ func inlineStyles(input []byte) []byte {
         nonLit  = strong.ReplaceAll(nonLit,[]byte("<b>$1</b>"))
         nonLit  = emp.ReplaceAll(nonLit, []byte(" <i>$1</i>"))
         result = append(result, nonLit...)
-        fmt.Printf("Inline: %s %s\n", pair,result)
+        //fmt.Printf("Inline: %s %s\n", pair,result)
         switch input[ pair[0]+1 ] {
             case 'm':
                 result = append(result, []byte(`\\((`)... )
@@ -83,7 +83,7 @@ func inlineStyles(input []byte) []byte {
                 result = append(result, []byte(`</span>`)... )
         }
         pos = pair[1]+1
-        fmt.Printf("Inline2: %s %s\n", pair,result)
+        //fmt.Printf("Inline2: %s %s\n", pair,result)
     }
     if pos<len(input) {
         nonLit := links.ReplaceAll(input[pos:], []byte("<a href=\"$2\">$1</a>"))
@@ -201,7 +201,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(".mov\" type=\"video/quicktime;\">")...)
                 result = append(result, []byte("</video>")...)
             case BlkReference:
-                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"/book-icon.png\"/></td>\n<td><a href=\"")...)
+                result = append(result, []byte("<div class=bibitem><table style=\"width=100%%\">\n<tr><td rowspan=\"3\"><img style=\"width:2rem;height:2rem\" src=\"../book-icon.png\"/></td>\n<td><a href=\"")...)
                 result = append(result, blk.Url... )
                 result = append(result, []byte("\">")...)
                 result = append(result, blk.Title... )
@@ -296,7 +296,7 @@ func makeMultiChanSlide(layout string, title []byte, pagenum int) MultiChanSlide
   result.primary   = make([]byte,0,16384)
   result.secondary = make([]byte,0,16384)
   result.longform  = make([]byte,0,16384)
-  result.PrintfLong( "<h1><a><img src=\"/flipbackarrow.jpg\" onclick=\"javascript:flipBackPage(%d)\"></img></a>%s</h1>",
+  result.PrintfLong( "<h1><a><img src=\"../flipbackarrow.jpg\" onclick=\"javascript:flipBackPage(%d)\"></img></a>%s</h1>",
                      pagenum, title)
   result.active    = "primary"
   return result
@@ -309,7 +309,7 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
     pageNum := fmt.Sprintf("%d. ",counter)
     buffer = append(buffer, []byte(pageNum)... )
     buffer = append(buffer, inlineStyles(self.title)... )
-    buffer = append(buffer, []byte(`</h1></div><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)... )
+    buffer = append(buffer, []byte(`</h1></div><div class="Slogo"><img src="../logo.svg"/></div><div class="Sin169">`)... )
     switch self.layout {
         case "single":
             buffer = append(buffer, self.primary...)
@@ -330,7 +330,7 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
     if self.usedLongform {
         buffer = append(buffer, []byte("<div class=\"flipicon\"><a onclick=\"javascript:flipPage(")...)
         buffer = append(buffer, []byte(fmt.Sprintf("%d",counter))...)
-        buffer = append(buffer, []byte(")\"><img src=\"/fliparrow.jpg\"></img></a></div>\n")...)
+        buffer = append(buffer, []byte(")\"><img src=\"../fliparrow.jpg\"></img></a></div>\n")...)
         buffer = append(buffer, []byte("\n</div><div class=\"longform\" id=\"slide")...)
         buffer = append(buffer, []byte(fmt.Sprintf("%d",counter))...)
         buffer = append(buffer, []byte("_long\">")...)
@@ -349,10 +349,10 @@ func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []
     var target MultiChanSlide
     result := make([]byte, 0, 16384)
     result = append(result, makePageHeader(string(headBlock.Style),headerInsert)...)
-    result = append(result, []byte(`<div id="navpanel"><a><img src="/leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="/rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="/closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button><button onclick="javascript:flipAspect()">flip aspect</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="/settings.svg" class="settings"></img></a>`)...)
+    result = append(result, []byte(`<div id="navpanel"><a><img src="../leftarrow.svg" class="icon" onclick="javascript:leftButton()" id="navleft"></img></a><a><img src="../rightarrow.svg" class="icon" onclick="javascript:rightButton()" id="navright"></img></a><a><img src="../closearrow.svg" class="icon" onclick="javascript:navcloseButton()" id="navclose"></img></a><button onclick="javascript:flipMode()">flip mode</button><button onclick="javascript:flipAspect()">flip aspect</button></div><a class="settings" onclick="javascript:settingsButton()"><img src="../settings.svg" class="settings"></img></a>`)...)
     result = append(result, []byte(`<div id="slides" style="margin-top:50%%; margin-bottom:50%%">`)...)
     // Title slide
-    result = append(result, []byte(`<div class="S169"><div class="Slogo"><img src="/logo.svg"/></div><div class="Sin169">`)...)
+    result = append(result, []byte(`<div class="S169"><div class="Slogo"><img src="../logo.svg"/></div><div class="Sin169">`)...)
     result = append(result, []byte("<h1>")... )
     result = append(result, inlineStyles(headBlock.CourseCode)... )
     result = append(result, []byte("</h1>")... )
@@ -453,7 +453,7 @@ func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []
                               blk.Body, blk.Body)
             case BlkReference:
                 target.Printf("<div class=bibitem><table style=\"width=100%%\">\n" +
-                              "<tr><td rowspan=\"3\"><img src=\"/book-icon.png\"/></td>\n" +
+                              "<tr><td rowspan=\"3\"><img src=\"../book-icon.png\"/></td>\n" +
                               "<td><a href=\"%s\">%s</a></td></tr><tr><td><i>%s</i></td></tr>",
                               blk.Url, blk.Title, blk.Author)
                 if blk.Detail!=nil {
