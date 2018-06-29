@@ -134,14 +134,15 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
     result = append(result, headBlock.Date... )
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("</div>")... )
+    lastTag  := ""
     lastKind := BlkParagraph
     for blk := range input {
-        if tagNames[lastKind]!="" && blk.Kind!=lastKind {
+        if lastTag!="" && tagNames[blk.Kind]!=lastTag {
             result = append(result, []byte("</")... )
             result = append(result, []byte(tagNames[lastKind])... )
             result = append(result, []byte(">")... )
         }
-        if tagNames[blk.Kind]!="" && blk.Kind!=lastKind {
+        if tagNames[blk.Kind]!="" && tagNames[blk.Kind]!=lastTag {
             result = append(result, []byte("<")... )
             result = append(result, []byte(tagNames[blk.Kind])... )
             if blk.Kind==BlkTableRow {
@@ -238,6 +239,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
             default:
                 fmt.Println("Block:", blk)
         }
+        lastTag  = tagNames[blk.Kind]
         lastKind = blk.Kind
     }
     result = append(result, pageFooter...)
