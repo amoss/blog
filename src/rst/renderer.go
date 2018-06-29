@@ -144,6 +144,9 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
         if tagNames[blk.Kind]!="" && blk.Kind!=lastKind {
             result = append(result, []byte("<")... )
             result = append(result, []byte(tagNames[blk.Kind])... )
+            if blk.Kind==BlkTableRow {
+                result = append(result, []byte(" class=\"allborders\" width=\"100%\"")...)
+            }
             result = append(result, []byte(">")... )
         }
         if blk.Kind!=BlkTableRow && blk.Kind!=BlkTableCell && lastKind==BlkTableCell {
