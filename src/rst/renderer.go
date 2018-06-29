@@ -146,6 +146,9 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
             result = append(result, []byte(tagNames[blk.Kind])... )
             result = append(result, []byte(">")... )
         }
+        if blk.Kind!=BlkTableRow && blk.Kind!=BlkTableCell && lastKind==BlkTableCell {
+            result = append(result, []byte("</tr>") )
+        }
         switch blk.Kind {
             case BlkParagraph:
                 result = append(result, []byte("<p>")... )
@@ -220,6 +223,15 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("</dt><dd>")...)
                 result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</dd>\n")...)
+            case BlkTableRow:
+                if lastKind==BlkTableCell {
+                    result = append(result, []byte("</tr>") )
+                }
+                result = append(result, []byte("<tr>") )
+            case BlkTableCell:
+                result = append(result, []byte("<td>") )
+                result = append(result, inlineStyles(blk.Body) )
+                result = append(result, []byte("</td>") )
             default:
                 fmt.Println("Block:", blk)
         }
