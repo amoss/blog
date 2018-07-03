@@ -5,6 +5,7 @@ import (
     "regexp"
     "bytes"
     "html"
+    "strings"
 )
 
 func makePageHeader(extra string, insert []byte) []byte {
