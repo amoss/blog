@@ -182,6 +182,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 fmt.Print(string(blk.Body))
                 for _,line := range strings.Split(string(blk.Body),"\n") {
                     fmt.Printf("Split out ->%s<-\n", line)
+                    result = append(result, []byte("<span class=\"tr\"><span class=\"th\"></span>")... )
                     result = append(result, []byte("<code>")... )
                     result = append(result, []byte(html.EscapeString(line))... )
                     result = append(result, byte('\n'))
