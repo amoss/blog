@@ -124,7 +124,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
     result := make([]byte, 0, 16384)
     result = append(result, makePageHeader(string(headBlock.Style),[]byte(""))...)
     result = append(result, []byte("<div style=\"width:100%;background-color:#000000;padding:0\">")... )
-    result = append(result, []byte("<div style=\"width:100%; background-color:#dddddd; padding:1rem\">")... )
+    result = append(result, []byte("<div style=\"width:100%; background-color:#dddddd; padding:1.5rem\">")... )
     result = append(result, []byte("<h1>")... )
     result = append(result, inlineStyles(headBlock.Title)... )
     result = append(result, []byte("</h1>")... )
@@ -135,7 +135,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
     result = append(result, headBlock.Date... )
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("</div>")... )
-    result = append(result, []byte("<div style=\"width:50rem;max-width:50rem;display:table;margin:0 auto;background-color:#ffffff;padding:1rem\">")... )
+    result = append(result, []byte("<div style=\"width:45rem;max-width:45rem;display:table;margin:0 auto;background-color:#ffffff;padding:1rem\">")... )
     lastTag  := ""
     lastKind := BlkParagraph
     for blk := range input {
