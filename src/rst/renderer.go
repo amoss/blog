@@ -177,10 +177,12 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(html.EscapeString(string(blk.Body)))... )
                 result = append(result, []byte("</pre>")... )
             case BlkCode:
-                escaped := html.EscapeString(string(blk.Body))
-                fmt.Println(escaped)
                 result = append(result, []byte("<pre class=\"code\">")... )
-                result = append(result, []byte(escaped)... )
+                for i,line := range strings.Split(string(blk.Body)) {
+                    result = append(result, []byte("<code>")... )
+                    result = append(result, []byte(html.EscapeString(line))... )
+                    result = append(result, []byte("</code>")... )
+                }
                 result = append(result, []byte("</pre>")... )
             case BlkTopicBegin:
                 result = append(result, []byte("<div class=\"Scallo\"><div class=\"ScalloHd\">")... )
