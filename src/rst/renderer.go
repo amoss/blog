@@ -182,6 +182,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 for _,line := range strings.Split(string(blk.Body),"\n") {
                     result = append(result, []byte("<code>")... )
                     result = append(result, []byte(html.EscapeString(line))... )
+                    result = append(result, byte("\n"))
                     result = append(result, []byte("</code>")... )
                 }
                 result = append(result, []byte("</pre>")... )
