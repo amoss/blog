@@ -179,6 +179,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("</pre>")... )
             case BlkCode:
                 result = append(result, []byte("<pre class=\"code\">")... )
+                fmt.Print(string(blk.Body))
                 for _,line := range strings.Split(string(blk.Body),"\n") {
                     fmt.Printf("Split out ->%s<-\n", line)
                     result = append(result, []byte("<code>")... )
