@@ -134,7 +134,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
     result = append(result, headBlock.Date... )
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("</div>")... )
-    result = append(result, []byte("<div style=\"width:50rem;max-width:50rem\">")... )
+    result = append(result, []byte("<div style=\"width:50rem;max-width:50rem;display:table;margin:0 auto;background-color:#ffffff;padding:1rem\">")... )
     lastTag  := ""
     lastKind := BlkParagraph
     for blk := range input {
