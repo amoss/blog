@@ -123,8 +123,8 @@ var tagNames = map[BlockE]string {
 func renderHtmlPage(headBlock Block, input chan Block) []byte {
     result := make([]byte, 0, 16384)
     result = append(result, makePageHeader(string(headBlock.Style),[]byte(""))...)
-    result = append(result, []byte("<div style=\"width:100%;background-color:#000000;padding:0\">")... )
-    result = append(result, []byte("<div style=\"width:100%; background-color:#dddddd; padding:1.5rem\">")... )
+    result = append(result, []byte("<div style=\"width:100%;background-color:#a7a8aa;padding:0\">")... )
+    result = append(result, []byte("<div style=\"width:100%; background-color:#a7a8aa; padding:1.5rem\">")... )
     result = append(result, []byte("<h1>")... )
     result = append(result, inlineStyles(headBlock.Title)... )
     result = append(result, []byte("</h1>")... )
