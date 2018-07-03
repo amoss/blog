@@ -186,7 +186,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                     result = append(result, []byte("<code>")... )
                     result = append(result, []byte(html.EscapeString(line))... )
                     result = append(result, byte('\n'))
-                    result = append(result, []byte("</code>")... )
+                    result = append(result, []byte("</code></span>")... )
                 }
                 result = append(result, []byte("</pre>")... )
             case BlkTopicBegin:
