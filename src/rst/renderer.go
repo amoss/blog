@@ -179,7 +179,7 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("</pre>")... )
             case BlkCode:
                 result = append(result, []byte("<pre class=\"code\">")... )
-                for i,line := range strings.Split(string(blk.Body),"\n") {
+                for _,line := range strings.Split(string(blk.Body),"\n") {
                     result = append(result, []byte("<code>")... )
                     result = append(result, []byte(html.EscapeString(line))... )
                     result = append(result, []byte("</code>")... )
