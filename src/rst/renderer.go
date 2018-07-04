@@ -181,8 +181,11 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 fmt.Print(string(blk.Body))
                 for _,line := range strings.Split(string(blk.Body),"\n") {
                     result = append(result, []byte("<tr><td class=\"lnum\"></td><td class=\"content\">")... )
-                    result = append(result, []byte(html.EscapeString(line))... )
-                    //result = append(result, byte('\n'))
+                    if len(line)>0 {
+                        result = append(result, []byte(html.EscapeString(line))... )
+                    } else {
+                        result = append(result, byte('\n'))
+                    }
                     result = append(result, []byte("</td></tr>")... )
                 }
                 result = append(result, []byte("</table></pre>")... )
