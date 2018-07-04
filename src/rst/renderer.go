@@ -180,10 +180,10 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("<pre class=\"code\"><table style=\"width: 100%;border-collapse: collapse\">")... )
                 fmt.Print(string(blk.Body))
                 for _,line := range strings.Split(string(blk.Body),"\n") {
-                    result = append(result, []byte("<tr><td class=\"lnum\"></td><td class=\"content\"><code>")... )
+                    result = append(result, []byte("<tr><td class=\"lnum\"></td><td class=\"content\">")... )
                     result = append(result, []byte(html.EscapeString(line))... )
                     //result = append(result, byte('\n'))
-                    result = append(result, []byte("</code></td></tr>")... )
+                    result = append(result, []byte("</td></tr>")... )
                 }
                 result = append(result, []byte("</table></pre>")... )
             case BlkTopicBegin:
