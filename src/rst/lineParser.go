@@ -291,6 +291,9 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             }
             st.next()
             st.indent = st.cur.indent
+            if st.indent==0 {
+                panic("Only one blank line after directive!")
+            }
             st.body   = make( []byte, 0, 1024)
             for st.cur.indent>=st.indent  ||  st.cur.kind==Blank {
                 if len(st.body)>0 { st.body = append(st.body, byte('\n')) }
