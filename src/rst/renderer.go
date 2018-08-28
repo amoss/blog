@@ -80,7 +80,7 @@ func inlineStyles(input []byte) []byte {
                 result = append(result, []byte(`</span>`)... )
             case 's':
                 result = append(result, []byte(`<span class="shell">`)... )
-                result = append(result, input[ pair[0]+8 : pair[1]-1 ]... )
+                result = append(result, html.EscapeString(string(input[ pair[0]+8 : pair[1]-1 ]))... )
                 result = append(result, []byte(`</span>`)... )
         }
         pos = pair[1]+1
