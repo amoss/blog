@@ -370,7 +370,7 @@ func (self *MultiChanSlide) finalise(buffer []byte, counter int) []byte {
 }
 
 
-func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []byte {
+func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte, insertVideo bool) []byte {
     counter := 1
     layout  := "single"
     var target MultiChanSlide
@@ -509,7 +509,9 @@ func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []
         lastKind = blk.Kind
     }
     result = target.finalise(result,counter)
-    result = append(result, []byte(`
+    result = append(result, []byte(`</div>`)...)
+    if insertVideo {
+        result = append(result, []byte(`
 </div><div id="vidarea" style="position:fixed; left:66%; width:34%; height:100%">
 <div id="vidholder" style="max-width:100%; max-height:95%; margin-top:50%; margin-bottom:50%">
 <video id="vid" width="100%" style="max-width:100%; max-height:95%" controls>\n
@@ -517,12 +519,13 @@ func renderHtmlSlides(headBlock Block, input chan Block, headerInsert []byte) []
 <source src="vid.webm" type="video/webm;">
 <source src="vid.mp4" type="video/mp4;"></video>
 </div></div>`)...)
+    }
     result = append(result, pageFooter...)
     return result
 }
 
 
-func RenderHtml(input chan Block) []byte {
+func RenderHtml(input chan Block, insertVideo bool) []byte {
     headBlock := <-input
     if headBlock.Kind!=BlkBigHeading {
         var bstr string
@@ -533,7 +536,7 @@ func RenderHtml(input chan Block) []byte {
         case "page":
             return renderHtmlPage(headBlock,input)
         case "slides":
-            return renderHtmlSlides(headBlock,input,[]byte(""))
+            return renderHtmlSlides(headBlock,input,[]byte(""),insertVideo)
         default:
             panic("Unknown style to render! "+string(headBlock.Style))
     }
@@ -541,7 +544,7 @@ func RenderHtml(input chan Block) []byte {
 }
 
 
-func RenderHtmlWithHeader(input chan Block, headerInsert []byte) []byte {
+func RenderHtmlWithHeader(input chan Block, headerInsert []byte, insertVideo bool) []byte {
     headBlock := <-input
     if headBlock.Kind!=BlkBigHeading {
         var bstr string
@@ -552,7 +555,7 @@ func RenderHtmlWithHeader(input chan Block, headerInsert []byte) []byte {
         case "page":
             return renderHtmlPage(headBlock,input)
         case "slides":
-            return renderHtmlSlides(headBlock,input,headerInsert)
+            return renderHtmlSlides(headBlock,input,headerInsert,insertVideo)
         default:
             panic("Unknown style to render! "+string(headBlock.Style))
     }
