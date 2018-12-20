@@ -20,7 +20,7 @@ func main() {
     lines  := rst.LineScanner(os.Args[1])
     if lines!=nil {
         blocks := rst.Parse(*lines)
-        res := rst.RenderHtml(blocks)
+        res := rst.RenderHtml(blocks,false)
         if output { fmt.Println(string(res)) }
     }
 }
