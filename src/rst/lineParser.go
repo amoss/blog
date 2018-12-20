@@ -305,7 +305,11 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
                 st.next()
             }
             if st.cur.kind==Blank { st.next() }
-            // Leave implicit newline from last Blank intact
+            // Kill the newline from the final Blank.
+            if st.body[ len(st.body)-1 ] == '\n' {
+              st.body = st.body[:-1]
+            }
+
             // Missing terminating blank will not be detected - is it worth it?
             switch string(dirName) {
                 case "shell":
