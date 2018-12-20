@@ -307,7 +307,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             if st.cur.kind==Blank { st.next() }
             // Kill the newline from the final Blank.
             if st.body[ len(st.body)-1 ] == '\n' {
-              st.body = st.body[:-1]
+              st.body = st.body[:len(st.body)-1]
             }
 
             // Missing terminating blank will not be detected - is it worth it?
