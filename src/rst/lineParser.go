@@ -274,6 +274,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
             return ParseSt_Init
         case "shell","code":
             position := []byte("default")
+            title := st.body
             style := []byte("")
             if st.cur.kind==Attribute {
                 switch string( bytes.ToLower(st.cur.marker) ) {
@@ -316,7 +317,7 @@ func ParseSt_InDirective(st *ParseSt) StateFn {
                 case "shell":
                     st.output <- Block{Kind:BlkShell,Body:st.body,Position:position,Style:style}
                 case "code":
-                    st.output <- Block{Kind:BlkCode,Body:st.body,Position:position,Style:style}
+                    st.output <- Block{Kind:BlkCode,Body:st.body,Position:position,Style:style,Title:title}
             }
             st.indent = -1
             return ParseSt_Init
