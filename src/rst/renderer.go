@@ -245,6 +245,10 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte("<td>")... )
                 result = append(result, inlineStyles(blk.Body)... )
                 result = append(result, []byte("</td>")... )
+            case BlkError:
+                result = append(result, []byte("<div class=error>")... )
+                result = append(result, blk.Body...) 
+                result = append(result, []byte("</div>")... )
             default:
                 fmt.Println("Block:", blk)
         }

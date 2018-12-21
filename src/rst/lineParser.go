@@ -35,6 +35,7 @@ const (
     BlkReference
     BlkTableRow
     BlkTableCell
+    BlkError
 )
 type Block struct {
     Kind     BlockE
@@ -491,7 +492,8 @@ func Parse(input chan LineClass) chan Block {
         defer close(state.output)
         defer func(){
             if r:= recover(); r!=nil {
-                fmt.Printf("Panic during parse! %s %s\n", r, debug.Stack() )
+                errMsg := []byte( fmt.Sprintf("Panic during parse! %s %s\n", r, debug.Stack() ) )
+                state.output <- Block{Kind:BlkError, Body:errMsg}
             }
         }()
         for stateFn := ParseSt_Init; stateFn != nil; {
