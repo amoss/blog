@@ -177,9 +177,9 @@ func renderHtmlPage(headBlock Block, input chan Block) []byte {
                 result = append(result, []byte(html.EscapeString(string(blk.Body)))... )
                 result = append(result, []byte("</pre>")... )
             case BlkCode:
-                result = append(result, []byte("<div style=\"position:relative\"><pre class=\"code\"><table style=\"width: 100%;border-collapse: collapse\">")... )
+                result = append(result, []byte("<div style=\"position:relative;margin-top:0.25rem;margin-bottom:0.25rem\"><pre class=\"code\"><table style=\"width: 100%;border-collapse: collapse\">")... )
                 if len(blk.Title)>0 {
-                  result = append(result, []byte("<div style=\"position:absolute;right:-5rem;top:-0.5rem;background:white;border:2px solid black;padding:0.125rem\">")...)
+                  result = append(result, []byte("<div style=\"position:absolute;right:5rem;top:-0.5rem;background:white;border:2px solid black;padding:0.125rem\">")...)
                   result = append(result, blk.Title...)
                   result = append(result, []byte("</div>")...)
                 }
