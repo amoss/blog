@@ -51,8 +51,7 @@ func ScanPosts(showDrafts bool) {
                 post,present := cache[entry.Name()]
                 // Check if the post is cached, if not create a placeholder.
                 if !present {
-                    post = make(Post)
-                    post.Filename = entry.Name()
+                    post = Post{Filename:[]byte(entry.Name()))
                     cache[entry.Name()] = post
                 }
                 // Check if the post in the cache is up-to-date, rescan if not.
@@ -72,11 +71,13 @@ func ScanPosts(showDrafts bool) {
                         }
                         bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
                         linkName := []byte( bName + "/index.html" )
+                        post.Title    = headBlock.Title
+                        post.Date     = pTime
+                        post.Tags     = headBlock.Tags
+                        post.Subtitle = headBlock.Subtitle
+                    } else {
+                        fmt.Printf("Error in the line scanner?\n")
                     }
-                    post.Title    = headBlock.Title
-                    post.Date     = pTime
-                    post.Tags     = headBlock.Tags
-                    post.Subtitle = headBlock.Subtitle
                 }
                 // Regardless of path to this point, mark cached data as up-to-date.
                 post.FileMod  = mdata.ModTime()
@@ -178,7 +179,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
       ScanPosts(true)
       posts := make([]Post,len(cache))
       for _,p := range cache {
-          posts.append(p)
+          posts = append(posts,p)
       }
       out.Write( renderIndex(posts,1,true) )
       return
