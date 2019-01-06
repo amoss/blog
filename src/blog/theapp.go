@@ -69,7 +69,7 @@ func ScanPosts(showDrafts bool) {
                               continue                 // Drop Draft posts
                             }
                         }
-                        bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
+                        //bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
                         //linkName := []byte( bName + "/index.html" )
                         post.Title    = headBlock.Title
                         post.Date     = pTime
