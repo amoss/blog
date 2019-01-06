@@ -29,41 +29,61 @@ type Post struct {
     Filename    []byte
     Tags        []byte
     Date        time.Time
+    FileMod     time.Time
+    FileSize    int64
     Subtitle    []byte
 }
 
-func ScanPosts(showDrafts bool) []Post {
+var cache map[string]Post
+
+func ScanPosts(showDrafts bool) {
     files, err := ioutil.ReadDir("data")
     if err!=nil {
-        return make([]Post,0,0)
+        fmt.Printf("Error scanning data: %s\n", err.Error())
+        return
     }
-    posts := make([]Post, 0, len(files))
     for _,entry := range files {
         if path.Ext(entry.Name())==".rst" {
-            lines  := rst.LineScanner("data/"+entry.Name())
-            if lines!=nil {
-                blocks := rst.Parse(*lines)
-                headBlock := <-blocks
-                for x := range blocks { x = x}
-                pTime,err := time.Parse("2006-01-02",string(headBlock.Date))
-                if err!=nil {
-                    if showDrafts {
-                      pTime = time.Now()       // Push "Draft" posts to top
-                    } else {
-                      continue                 // Drop Draft posts
-                    }
+            mdata,err := os.Stat(entry.Name())
+            if err!=nil {
+                fmt.Printf("Error calling stat: %s\n", err.Error())
+            } else {
+                post,present := cache[entry.Name()]
+                // Check if the post is cached, if not create a placeholder.
+                if !present {
+                    post = make(Post)
+                    post.Filename = entry.Name()
+                    cache[entry.Name()] = post
                 }
-                bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
-                linkName := []byte( bName + "/index.html" )
-                posts = append(posts, Post{Filename:linkName,
-                                           Title:headBlock.Title,
-                                           Date:pTime,
-                                           Tags:headBlock.Tags,
-                                           Subtitle:headBlock.Subtitle})
+                // Check if the post in the cache is up-to-date, rescan if not.
+                if post.FileMod!=mdata.ModTime() || post.FileSize!=mdata.Size() {
+                    lines  := rst.LineScanner("data/"+entry.Name())
+                    if lines!=nil {
+                        blocks := rst.Parse(*lines)
+                        headBlock := <-blocks
+                        for x := range blocks { x = x}
+                        pTime,err := time.Parse("2006-01-02",string(headBlock.Date))
+                        if err!=nil {
+                            if showDrafts {
+                              pTime = time.Now()       // Push "Draft" posts to top
+                            } else {
+                              continue                 // Drop Draft posts
+                            }
+                        }
+                        bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
+                        linkName := []byte( bName + "/index.html" )
+                    }
+                    post.Title    = headBlock.Title
+                    post.Date     = pTime
+                    post.Tags     = headBlock.Tags
+                    post.Subtitle = headBlock.Subtitle
+                }
+                // Regardless of path to this point, mark cached data as up-to-date.
+                post.FileMod  = mdata.ModTime()
+                post.FileSize = mdata.Size()
             }
         }
     }
-    return posts
 }
 
 func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
@@ -155,7 +175,11 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
       return
   }
   if req.URL.Path=="/private/index.html" {
-      posts := ScanPosts(true)
+      ScanPosts(true)
+      posts := make([]Post,len(cache))
+      for _,p := range cache {
+          posts.append(p)
+      }
       out.Write( renderIndex(posts,1,true) )
       return
   }
@@ -164,7 +188,11 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
   if req.URL.Path=="/index.html" {
-      posts := ScanPosts(false)
+      ScanPosts(false)
+      posts := make([]Post,len(cache))
+      for _,p := range cache {
+          posts.append(p)
+      }
       out.Write( renderIndex(posts,0,false) )
       return
   }
@@ -264,6 +292,8 @@ var whitelist = []string{ "/styles.css", "/graymaster2.jpg", "/Basic-Regular.ttf
                 "/ArbutusSlab-Regular.ttf", "/Rasa-Medium.ttf", "/Yrsa-Medium.ttf",
                 "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf", "/Rasa-Regular.ttf" }
 func main() {
+    cache := make(map[string]Post)
+
     http.Handle("/", wrapper(http.HandlerFunc(publicHandler)))
     http.Handle("/private/", wrapper(http.HandlerFunc(privateHandler)))
     for _,p := range whitelist {
