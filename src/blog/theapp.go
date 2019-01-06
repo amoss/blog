@@ -51,7 +51,7 @@ func ScanPosts(showDrafts bool) {
                 post,present := cache[entry.Name()]
                 // Check if the post is cached, if not create a placeholder.
                 if !present {
-                    post = Post{Filename:[]byte(entry.Name()))
+                    post = Post{Filename:[]byte(entry.Name())}
                     cache[entry.Name()] = post
                 }
                 // Check if the post in the cache is up-to-date, rescan if not.
