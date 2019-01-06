@@ -48,7 +48,6 @@ func ScanPosts(showDrafts bool) {
             if err!=nil {
                 fmt.Printf("Error calling stat: %s\n", err.Error())
             } else {
-                fmt.Printf("Stat result: %s\n", mdata)
                 post,present := cache[entry.Name()]
                 // Check if the post is cached, if not create a placeholder.
                 if !present {
