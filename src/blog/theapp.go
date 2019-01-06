@@ -67,6 +67,7 @@ func ScanPosts(showDrafts bool) {
                             if showDrafts {
                               pTime = time.Now()       // Push "Draft" posts to top
                             } else {
+                              delete(cache,entry.Name())
                               continue                 // Drop Draft posts
                             }
                         }
