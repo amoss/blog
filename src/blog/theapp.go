@@ -52,7 +52,9 @@ func ScanPosts(showDrafts bool) {
                 post,present := cache[entry.Name()]
                 // Check if the post is cached, if not create a placeholder.
                 if !present {
-                    post = Post{Filename:[]byte(entry.Name())}
+                    bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
+                    linkName := []byte( bName + "/index.html" )
+                    post = Post{Filename:linkName}
                     cache[entry.Name()] = post
                 }
                 // Check if the post in the cache is up-to-date, rescan if not.
@@ -71,8 +73,6 @@ func ScanPosts(showDrafts bool) {
                               continue                 // Drop Draft posts
                             }
                         }
-                        //bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
-                        //linkName := []byte( bName + "/index.html" )
                         post.Title    = headBlock.Title
                         post.Date     = pTime
                         post.Tags     = headBlock.Tags
