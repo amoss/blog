@@ -83,6 +83,7 @@ func ScanPosts(showDrafts bool) {
                 // Regardless of path to this point, mark cached data as up-to-date.
                 post.FileMod  = mdata.ModTime()
                 post.FileSize = mdata.Size()
+                cache[entry.Name()] = post
             }
         }
     }
