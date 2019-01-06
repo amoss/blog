@@ -44,7 +44,7 @@ func ScanPosts(showDrafts bool) {
     }
     for _,entry := range files {
         if path.Ext(entry.Name())==".rst" {
-            mdata,err := os.Stat("data/"+relName)
+            mdata,err := os.Stat("data/"+entry.Name())
             if err!=nil {
                 fmt.Printf("Error calling stat: %s\n", err.Error())
             } else {
