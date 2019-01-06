@@ -70,7 +70,7 @@ func ScanPosts(showDrafts bool) {
                             }
                         }
                         bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
-                        linkName := []byte( bName + "/index.html" )
+                        //linkName := []byte( bName + "/index.html" )
                         post.Title    = headBlock.Title
                         post.Date     = pTime
                         post.Tags     = headBlock.Tags
@@ -293,7 +293,7 @@ var whitelist = []string{ "/styles.css", "/graymaster2.jpg", "/Basic-Regular.ttf
                 "/ArbutusSlab-Regular.ttf", "/Rasa-Medium.ttf", "/Yrsa-Medium.ttf",
                 "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf", "/Rasa-Regular.ttf" }
 func main() {
-    cache := make(map[string]Post)
+    cache = make(map[string]Post)
 
     http.Handle("/", wrapper(http.HandlerFunc(publicHandler)))
     http.Handle("/private/", wrapper(http.HandlerFunc(privateHandler)))
