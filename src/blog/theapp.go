@@ -192,7 +192,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
       ScanPosts(false)
       posts := make([]Post,len(cache))
       for _,p := range cache {
-          posts.append(p)
+          posts = append(posts,p)
       }
       out.Write( renderIndex(posts,0,false) )
       return
