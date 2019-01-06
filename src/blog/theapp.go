@@ -179,7 +179,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
   }
   if req.URL.Path=="/private/index.html" {
       ScanPosts(true)
-      posts := make([]Post,len(cache))
+      posts := make([]Post,0,len(cache))
       for _,p := range cache {
           posts = append(posts,p)
       }
@@ -192,7 +192,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
 func publicHandler(out http.ResponseWriter, req *http.Request) {
   if req.URL.Path=="/index.html" {
       ScanPosts(false)
-      posts := make([]Post,len(cache))
+      posts := make([]Post,0,len(cache))
       for _,p := range cache {
           posts = append(posts,p)
       }
