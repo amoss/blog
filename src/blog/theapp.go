@@ -44,11 +44,11 @@ func ScanPosts(showDrafts bool) {
     }
     for _,entry := range files {
         if path.Ext(entry.Name())==".rst" {
-            relName := fmt.Sprintf("data/%s",entry.Name())
-            mdata,err := os.Stat(relName)
+            mdata,err := os.Stat("data/"+relName)
             if err!=nil {
                 fmt.Printf("Error calling stat: %s\n", err.Error())
             } else {
+                fmt.Printf("Stat result: %s\n", mdata)
                 post,present := cache[entry.Name()]
                 // Check if the post is cached, if not create a placeholder.
                 if !present {
