@@ -90,7 +90,7 @@ func ScanPosts(showDrafts bool) {
         }
     }
     t2 := time.Now()
-    fmt.Printf("%29s: Request serviced in %.1fms\n","ScanPosts",float64(t2.Sub(t))/float64(time.Millisecond))
+    fmt.Printf("%29s: Request serviced in %.1fms\n","ScanPosts",float64(t2.Sub(t1))/float64(time.Millisecond))
 }
 
 func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
