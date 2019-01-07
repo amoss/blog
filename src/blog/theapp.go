@@ -69,6 +69,8 @@ func ScanPosts() {
                         pTime,err := time.Parse("2006-01-02",string(headBlock.Date))
                         if err!=nil {
                             pTime = time.Now()       // Push "Draft" posts to top
+                        } else {
+                            post.Draft = false
                         }
                         post.Title    = headBlock.Title
                         post.Date     = pTime
