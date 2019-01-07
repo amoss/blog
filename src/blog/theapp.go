@@ -59,6 +59,7 @@ func ScanPosts(showDrafts bool) {
                 }
                 // Check if the post in the cache is up-to-date, rescan if not.
                 if post.FileMod!=mdata.ModTime() || post.FileSize!=mdata.Size() {
+                    fmt.Printf("Cache detected change: reparsing %s\n",entry.Name())
                     lines  := rst.LineScanner("data/"+entry.Name())
                     if lines!=nil {
                         blocks := rst.Parse(*lines)
