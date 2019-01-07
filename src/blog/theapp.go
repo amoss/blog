@@ -37,6 +37,7 @@ type Post struct {
 var cache map[string]Post
 
 func ScanPosts(showDrafts bool) {
+    t1 := time.Now()
     files, err := ioutil.ReadDir("data")
     if err!=nil {
         fmt.Printf("Error scanning data: %s\n", err.Error())
@@ -87,6 +88,8 @@ func ScanPosts(showDrafts bool) {
             }
         }
     }
+    t2 := time.Now()
+    fmt.Printf("%29s: Request serviced in %.1fms\n","ScanPosts",float64(t2.Sub(t))/float64(time.Millisecond))
 }
 
 func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
