@@ -32,11 +32,12 @@ type Post struct {
     FileMod     time.Time
     FileSize    int64
     Subtitle    []byte
+    Draft       bool
 }
 
 var cache map[string]Post
 
-func ScanPosts(showDrafts bool) {
+func ScanPosts() {
     t1 := time.Now()
     files, err := ioutil.ReadDir("data")
     if err!=nil {
@@ -54,7 +55,7 @@ func ScanPosts(showDrafts bool) {
                 if !present {
                     bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
                     linkName := []byte( bName + "/index.html" )
-                    post = Post{Filename:linkName}
+                    post = Post{Filename:linkName, Draft:true}
                     cache[entry.Name()] = post
                 }
                 // Check if the post in the cache is up-to-date, rescan if not.
@@ -69,9 +70,6 @@ func ScanPosts(showDrafts bool) {
                         if err!=nil {
                             if showDrafts {
                               pTime = time.Now()       // Push "Draft" posts to top
-                            } else {
-                              delete(cache,entry.Name())
-                              continue                 // Drop Draft posts
                             }
                         }
                         post.Title    = headBlock.Title
@@ -182,7 +180,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
       return
   }
   if req.URL.Path=="/private/index.html" {
-      ScanPosts(true)
+      ScanPosts()
       posts := make([]Post,0,len(cache))
       for _,p := range cache {
           posts = append(posts,p)
@@ -195,10 +193,12 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
   if req.URL.Path=="/index.html" {
-      ScanPosts(false)
+      ScanPosts()
       posts := make([]Post,0,len(cache))
       for _,p := range cache {
-          posts = append(posts,p)
+          if !p.Draft {
+              posts = append(posts,p)
+          }
       }
       out.Write( renderIndex(posts,0,false) )
       return
