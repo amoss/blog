@@ -1,18 +1,28 @@
 package main
 
 import (
+    "bytes"
+    "context"
+    "crypto/sha256"
+    "crypto/hmac"
+    "crypto/rand"
+    "encoding/base64"
+    "encoding/json"
+    "errors"
+    "hash"
+    "fmt"
+    "io/ioutil"
+    "os"
+    "net/http"
+    "net/url"
+    "path"
     "runtime/debug"
-      "net/http"
-      "fmt"
-      "io/ioutil"
-      "errors"
-      "os"
-      "path"
-      "time"
-      "sort"
-      "strings"
-      "rst"
-      //"regexp"
+    "sort"
+    "strings"
+    "time"
+
+    "rst"
+    "golang.org/x/oauth2"
 )
 
 
@@ -294,19 +304,214 @@ func staticHandler(out http.ResponseWriter, req *http.Request) {
   out.Write(cnt)
 }
 
+func secureHandler(out http.ResponseWriter, req *http.Request) {
+    token,err := req.Cookie("login")
+    if err==http.ErrNoCookie {
+        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path[1:])  // Lead leading slash
+        http.Redirect(out, req, target, http.StatusFound)
+        return
+    } else if err!=nil {
+        http.Error(out, errors.New("Something went wrong :(").Error(),
+                                   http.StatusInternalServerError)
+        return
+    }
+
+    loginKey,ok := checkMac(token.Value)
+    s,found := sessions[string(loginKey)]
+
+    if !ok || !found {
+        fmt.Printf("Bad session cookie: %s -> %s (%s,%s)\n", token.Value, loginKey, ok, found)
+        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path[1:])  // Lead leading slash
+        http.Redirect(out, req, target, http.StatusFound)
+        return
+
+    } else {
+        fmt.Fprintf(out, "In you are, %s from %s\n",s.user.Name,s.provider)
+    }
+
+}
+
+
+var providers = map[string]oauth2.Config{
+    "google": oauth2.Config{
+            ClientID:     "CENSORED",
+            ClientSecret: "CENSORED",
+            Endpoint:    oauth2.Endpoint{AuthURL:"https://accounts.google.com/o/oauth2/v2/auth",
+                                         TokenURL:"https://oauth2.googleapis.com/token"},
+            RedirectURL:  "http://localhost:8080/callback",
+            Scopes:       []string{"openid", "profile", "email" }}}
+
+var userInfos = map[string]string {
+    "google": "https://openidconnect.googleapis.com/v1/userinfo" }
+
+func authHandler(out http.ResponseWriter, req *http.Request) {
+    provName := req.URL.Query().Get("provider")
+    config,found := providers[provName]
+    if !found {
+        http.Error(out, "Who the fuck is that?!?", http.StatusInternalServerError)
+        return
+    }
+    referer := req.Header.Get("Referer")
+    refUrl,err := url.Parse(referer)
+    if len(referer)==0  ||  err!=nil {
+        http.Error(out, "Referer was made of hairy bollocks", http.StatusInternalServerError)
+        return
+    }
+    original := refUrl.Query().Get("from")
+    stateData := fmt.Sprintf("%s|%s",provName,original)
+    encState := msgMac(stateData)
+    http.Redirect(out, req, config.AuthCodeURL(encState), http.StatusFound)
+}
+
+
+func msgMac(msg string) string {
+    stateHmac.Reset()
+    stateHmac.Write([]byte(msg))
+    mac := stateHmac.Sum(nil)
+    state := fmt.Sprintf("%s|%s",msg,mac)
+    return base64.StdEncoding.EncodeToString([]byte(state))
+}
+
+func checkMac(mac string) ([]byte, bool) {
+    fmt.Printf("checkMac: %s\n",mac)
+    raw,err := base64.StdEncoding.DecodeString(mac)
+    if err!=nil {
+        return nil, false
+    }
+    split   := bytes.LastIndexByte(raw,'|')
+    msg     := raw[:split]
+    oldSig  := raw[split+1:]
+
+    fmt.Printf("msg: %s\n",msg)
+
+    stateHmac.Reset()
+    stateHmac.Write([]byte(msg))
+    newSig := stateHmac.Sum(nil)
+
+    return msg, hmac.Equal(oldSig,newSig)
+}
+
+func doRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
+        client := http.DefaultClient
+        if c, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); ok {
+                client = c
+        }
+        return client.Do(req.WithContext(ctx))
+}
+
+type UserInfo struct {
+    Sub     string
+    Profile string
+    Email   string
+    Name    string
+}
+
+type Session struct {
+    user     UserInfo
+    token   *oauth2.Token
+    provider string
+}
+
+var sessions map[string] Session = make(map[string]Session)
+var hmacKey []byte
+var stateHmac hash.Hash
+
+func callbackHandler( out http.ResponseWriter, req *http.Request) {
+    var provider, original string
+    ctx := context.Background()
+    state,ok := checkMac( req.URL.Query().Get("state") )
+    if ok {
+        decodeParts := bytes.Split(state,[]byte("|"))
+        provider = string(decodeParts[0])
+        original = string(decodeParts[1])
+    } else {
+        http.Error(out, "State is always the problem %s", http.StatusBadRequest)
+        return
+    }
+    config := providers[provider]
+    oauth2Token,err := config.Exchange(ctx, req.URL.Query().Get("code"))
+    if err!=nil {
+        http.Error(out, "Provider cannot exchange code", http.StatusBadRequest)
+        return
+    }
+    tokenSrc := oauth2.StaticTokenSource(oauth2Token)
+    token,err := tokenSrc.Token()
+    if err!=nil {
+        http.Error(out, "Token problem", http.StatusInternalServerError)
+        return
+    }
+    uiReq,err := http.NewRequest("GET", userInfos[provider],nil)
+    if err!=nil {
+        http.Error(out, "No request for userinfo", http.StatusInternalServerError)
+        return
+    }
+    token.SetAuthHeader(uiReq)
+    fmt.Printf("Req: %s\n",uiReq)
+    resp, err := doRequest(ctx, uiReq)
+    if err!=nil {
+        http.Error(out, fmt.Sprintf("Token request failed: %s",err.Error()),
+                        http.StatusInternalServerError)
+        return
+    }
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err!=nil {
+        http.Error(out, "Can't read Token request body", http.StatusInternalServerError)
+        return
+    }
+    if resp.StatusCode != http.StatusOK {
+        http.Error(out, fmt.Sprintf("Token exchange failed %s: %s", resp.Status, body),
+                        http.StatusInternalServerError)
+    }
+
+    fmt.Printf("Third leg response: %s\n", body)
+
+    var userInfo UserInfo
+    if err := json.Unmarshal(body, &userInfo); err != nil {
+        http.Error(out, fmt.Sprintf("Userinfo decode failed: %v", err),
+                        http.StatusInternalServerError)
+        return
+    }
+
+    loginKey := fmt.Sprintf("%s|%s", provider, userInfo.Sub)
+    encLogin := msgMac(loginKey)
+
+    http.SetCookie(out, &http.Cookie{Name:"login",
+                                     Value:encLogin,
+                                     Expires:time.Now().Add(time.Minute*10)})
+
+    sessions[loginKey] = Session{user:userInfo,token:oauth2Token,provider:provider}
+    http.Redirect(out, req, original, http.StatusFound)
+}
+
+//func loginHandler(out http.ResponseWriter, req *http.Request) {
+//}
+
 var whitelist = []string{ "/styles.css", "/graymaster2.jpg", "/Basic-Regular.ttf",
                 "/Inconsolata-Regular.ttf", "/SourceSansPro-Regular.otf",
                 "/ArbutusSlab-Regular.ttf", "/Rasa-Medium.ttf", "/Yrsa-Medium.ttf",
-                "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf", "/Rasa-Regular.ttf" }
+                "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf", "/Rasa-Regular.ttf",
+                "/login.html"}
 func main() {
     cache = make(map[string]Post)
+    hmacKey = make([]byte,32)
+    _,err := rand.Read(hmacKey)
+    if err!=nil {
+        fmt.Printf("Can't initialise the random hmac key!\n")
+        return
+    }
+    stateHmac = hmac.New(sha256.New,hmacKey)
 
     http.Handle("/", wrapper(http.HandlerFunc(publicHandler)))
     http.Handle("/private/", wrapper(http.HandlerFunc(privateHandler)))
+    http.Handle("/secure/", http.HandlerFunc(secureHandler))
+    http.Handle("/auth", http.HandlerFunc(authHandler))
+    http.Handle("/callback", http.HandlerFunc(callbackHandler))
+//    http.Handle("/login", http.HandlerFunc(loginHandler))
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
     }
-    err := http.ListenAndServe(":8080", nil)
+    err = http.ListenAndServe(":8080", nil)
     if err != nil {
         fmt.Printf("Error creating server: %s\n", err)
     }
