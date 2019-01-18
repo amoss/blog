@@ -505,11 +505,11 @@ func main() {
     }
     stateHmac = hmac.New(sha256.New,hmacKey)
 
-    http.Handle("/", wrapper(http.HandlerFunc(publicHandler)))
+    http.Handle("/",         wrapper(http.HandlerFunc(publicHandler)))
     http.Handle("/private/", wrapper(http.HandlerFunc(privateHandler)))
-    http.Handle("/secure/", http.HandlerFunc(secureHandler))
-    http.Handle("/auth", http.HandlerFunc(authHandler))
-    http.Handle("/callback", http.HandlerFunc(callbackHandler))
+    http.Handle("/secure/",  wrapper(http.HandlerFunc(secureHandler)))
+    http.Handle("/auth",     wrapper(http.HandlerFunc(authHandler)))
+    http.Handle("/callback", wrapper(http.HandlerFunc(callbackHandler)))
 //    http.Handle("/login", http.HandlerFunc(loginHandler))
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
