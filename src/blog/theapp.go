@@ -308,7 +308,10 @@ func secureHandler(out http.ResponseWriter, req *http.Request) {
     token,err := req.Cookie("login")
     if err==http.ErrNoCookie {
         target := fmt.Sprintf("../login.html?from=%s",req.URL.Path[1:])  // Lead leading slash
-        http.Redirect(out, req, target, http.StatusFound)
+        // The golang Redirect is based off an obsolete RFC so it forces the URL to absolute
+        out.Header().Set("Location",target)
+        out.WriteHeader(http.StatusFound)
+        //http.Redirect(out, req, target, http.StatusFound)
         return
     } else if err!=nil {
         http.Error(out, errors.New("Something went wrong :(").Error(),
