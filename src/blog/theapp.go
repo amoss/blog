@@ -497,7 +497,7 @@ func main() {
     hmacKey = make([]byte,32)
     _,err := rand.Read(hmacKey)
     if err!=nil {
-        fmt.Printf("Can't initialise the random hmac key!\n")
+        fmt.Printf("Can't initialise the random hmac key! %s\n", err.Error())
         return
     }
     stateHmac = hmac.New(sha256.New,hmacKey)
