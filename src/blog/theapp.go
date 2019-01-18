@@ -435,9 +435,12 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
         return
     }
     config := providers[provider]
+    fmt.Printf("Config: %s\n",config)
+    fmt.Printf("Code: %s\n",req.URL.Query().Get("code"))
     oauth2Token,err := config.Exchange(ctx, req.URL.Query().Get("code"))
     if err!=nil {
-        http.Error(out, "Provider cannot exchange code", http.StatusBadRequest)
+        http.Error(out, fmt.Sprintf("Provider cannot exchange code: %s",err.Error()), 
+                        http.StatusBadRequest)
         return
     }
     tokenSrc := oauth2.StaticTokenSource(oauth2Token)
