@@ -352,7 +352,7 @@ var userInfos = map[string]string {
 
 func authHandler(out http.ResponseWriter, req *http.Request) {
     provName := req.URL.Query().Get("provider")
-    config,found := providers[provName]
+    config,found := &providers[provName]        // Do they hide state in here?
     if !found {
         http.Error(out, "Who the fuck is that?!?", http.StatusInternalServerError)
         return
@@ -431,7 +431,7 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
         http.Error(out, "State is always the problem %s", http.StatusBadRequest)
         return
     }
-    config := providers[provider]
+    config := &providers[provider]      // Do they hide state in here?
     fmt.Printf("State: %s\n",state)
     fmt.Printf("Config: %s\n",config)
     fmt.Printf("Code: %s\n",req.URL.Query().Get("code"))
