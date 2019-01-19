@@ -338,8 +338,8 @@ func secureHandler(out http.ResponseWriter, req *http.Request) {
 }
 
 
-var providers = map[string]oauth2.Config{
-    "google": oauth2.Config{
+var providers = map[string]*oauth2.Config{
+    "google": &oauth2.Config{
             ClientID:     "CENSORED",
             ClientSecret: "CENSORED",
             Endpoint:    oauth2.Endpoint{AuthURL:"https://accounts.google.com/o/oauth2/v2/auth",
@@ -352,7 +352,7 @@ var userInfos = map[string]string {
 
 func authHandler(out http.ResponseWriter, req *http.Request) {
     provName := req.URL.Query().Get("provider")
-    config,found := &providers[provName]        // Do they hide state in here?
+    config,found := providers[provName]        // Do they hide state in here?
     if !found {
         http.Error(out, "Who the fuck is that?!?", http.StatusInternalServerError)
         return
@@ -431,7 +431,7 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
         http.Error(out, "State is always the problem %s", http.StatusBadRequest)
         return
     }
-    config := &providers[provider]      // Do they hide state in here?
+    config := providers[provider]      // Do they hide state in here?
     fmt.Printf("State: %s\n",state)
     fmt.Printf("Config: %s\n",config)
     fmt.Printf("Code: %s\n",req.URL.Query().Get("code"))
