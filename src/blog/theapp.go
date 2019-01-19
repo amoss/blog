@@ -379,7 +379,6 @@ func msgMac(msg string) string {
 }
 
 func checkMac(mac string) ([]byte, bool) {
-    fmt.Printf("checkMac: %s\n",mac)
     raw,err := base64.StdEncoding.DecodeString(mac)
     if err!=nil {
         return nil, false
@@ -387,8 +386,6 @@ func checkMac(mac string) ([]byte, bool) {
     split   := bytes.LastIndexByte(raw,'|')
     msg     := raw[:split]
     oldSig  := raw[split+1:]
-
-    fmt.Printf("msg: %s\n",msg)
 
     stateHmac.Reset()
     stateHmac.Write([]byte(msg))
@@ -435,6 +432,7 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
         return
     }
     config := providers[provider]
+    fmt.Printf("State: %s\n",state)
     fmt.Printf("Config: %s\n",config)
     fmt.Printf("Code: %s\n",req.URL.Query().Get("code"))
     oauth2Token,err := config.Exchange(ctx, req.URL.Query().Get("code"))
