@@ -373,7 +373,7 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
         return
     }
     original := refUrl.Query().Get("from")
-    stateData := fmt.Sprintf("%s|%s",provName,original)
+    stateData := fmt.Sprintf("%s|%s",provName,"/"+original)
     encState := msgMac(stateData)
     http.Redirect(out, req, config.AuthCodeURL(encState), http.StatusFound)
 }
