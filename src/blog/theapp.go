@@ -224,10 +224,12 @@ func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool) 
     }
 
 var reqPath string
+    reqPath = req.URL.Path
+    if strings.HasPrefix(reqPath,"/awmblog") {
+        reqPath = reqPath[8:]
+    }
     if showDrafts {
-      reqPath = req.URL.Path[8:]     // Eat "/private/" -> "/"
-    } else {
-      reqPath = req.URL.Path
+      reqPath = reqPath[8:]     // Eat "/private/" -> "/"
     }
 
     mime,ok := mimeTypes[ path.Ext(reqPath) ]
