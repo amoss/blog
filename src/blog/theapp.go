@@ -16,6 +16,7 @@ import (
     "net/http"
     "net/url"
     "path"
+    "path/filepath"
     "runtime/debug"
     "sort"
     "strings"
@@ -294,7 +295,7 @@ func wrapper(handler http.Handler) http.Handler {
 
 
 func staticHandler(out http.ResponseWriter, req *http.Request) {
-  target := "data" + req.URL.Path
+  target := "data" + filepath.Base(req.URL.Path)
   fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
   cnt,_ := ioutil.ReadFile(target)
   /* No svg in the blog whitelist
