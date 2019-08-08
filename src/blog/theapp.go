@@ -351,6 +351,7 @@ var providers = map[string]*oauth2.Config{
             
     }}
 
+
 var userInfos = map[string]string {
     "google": "https://openidconnect.googleapis.com/v1/userinfo" }
 
@@ -361,6 +362,7 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
         http.Error(out, "Who the fuck is that?!?", http.StatusInternalServerError)
         return
     }
+
     referer := req.Header.Get("Referer")
     refUrl,err := url.Parse(referer)
     if len(referer)==0  ||  err!=nil {
@@ -513,11 +515,11 @@ func main() {
     }
     stateHmac = hmac.New(sha256.New,hmacKey)
 
-    http.Handle("/",         wrapper(http.HandlerFunc(publicHandler)))
-    http.Handle("/private/", wrapper(http.HandlerFunc(privateHandler)))
-    http.Handle("/secure/",  wrapper(http.HandlerFunc(secureHandler)))
-    http.Handle("/auth",     wrapper(http.HandlerFunc(authHandler)))
-    http.Handle("/callback", wrapper(http.HandlerFunc(callbackHandler)))
+    http.Handle("/awmblog/",         wrapper(http.HandlerFunc(publicHandler)))
+    http.Handle("/awmblog/private/", wrapper(http.HandlerFunc(privateHandler)))
+    http.Handle("/awmblog/secure/",  wrapper(http.HandlerFunc(secureHandler)))
+    http.Handle("/awmblog/auth",     wrapper(http.HandlerFunc(authHandler)))
+    http.Handle("/awmblog/callback", wrapper(http.HandlerFunc(callbackHandler)))
 //    http.Handle("/login", http.HandlerFunc(loginHandler))
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
