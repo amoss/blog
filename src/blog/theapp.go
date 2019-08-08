@@ -310,7 +310,7 @@ func staticHandler(out http.ResponseWriter, req *http.Request) {
 func secureHandler(out http.ResponseWriter, req *http.Request) {
     token,err := req.Cookie("login")
     if err==http.ErrNoCookie {
-        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path[1:])  // Lead leading slash
+        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path)
         // The golang Redirect is based off an obsolete RFC so it forces the URL to absolute
         out.Header().Set("Location",target)
         out.WriteHeader(http.StatusFound)
@@ -373,7 +373,7 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
         return
     }
     original := refUrl.Query().Get("from")
-    stateData := fmt.Sprintf("%s|%s",provName,"/"+original)
+    stateData := fmt.Sprintf("%s|%s",provName,original)
     encState := msgMac(stateData)
     http.Redirect(out, req, config.AuthCodeURL(encState), http.StatusFound)
 }
