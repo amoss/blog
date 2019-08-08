@@ -342,10 +342,14 @@ var providers = map[string]*oauth2.Config{
     "google": &oauth2.Config{
             ClientID:     "CENSORED",
             ClientSecret: "CENSORED",
-            Endpoint:    oauth2.Endpoint{AuthURL:"https://accounts.google.com/o/oauth2/v2/auth",
-                                         TokenURL:"https://oauth2.googleapis.com/token"},
+            Endpoint:     oauth2.Endpoint{
+                            AuthURL:  "https://accounts.google.com/o/oauth2/auth",
+                            TokenURL: "https://accounts.google.com/o/oauth2/token"},
             RedirectURL:  "https://mechani.se/awmblog/callback",
-            Scopes:       []string{"openid", "profile", "email" }}}
+            Scopes:       []string{"openid", "profile", "email" }},
+    "twitter": &oauth2.Config{
+            
+    }}
 
 var userInfos = map[string]string {
     "google": "https://openidconnect.googleapis.com/v1/userinfo" }
