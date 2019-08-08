@@ -202,7 +202,7 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
 }
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
-  if req.URL.Path=="/index.html" {
+  if req.URL.Path=="/awmblog/index.html" {
       ScanPosts()
       posts := make([]Post,0,len(cache))
       for _,p := range cache {
