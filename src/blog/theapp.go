@@ -202,7 +202,6 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
 }
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
-  fmt.Println("Original URL is ", req.URL.Path)
   if req.URL.Path=="/awmblog/index.html" {
       ScanPosts()
       posts := make([]Post,0,len(cache))
@@ -501,11 +500,11 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
 //func loginHandler(out http.ResponseWriter, req *http.Request) {
 //}
 
-var whitelist = []string{ "/styles.css", "/graymaster2.jpg", "/Basic-Regular.ttf",
-                "/Inconsolata-Regular.ttf", "/SourceSansPro-Regular.otf",
-                "/ArbutusSlab-Regular.ttf", "/Rasa-Medium.ttf", "/Yrsa-Medium.ttf",
-                "/FanwoodText-Regular.ttf",  "/SpectralSC-Medium.ttf", "/Rasa-Regular.ttf",
-                "/login.html"}
+var whitelist = []string{ "/awmblog/styles.css", "/awmblog/graymaster2.jpg", "/awmblog/Basic-Regular.ttf",
+                "/awmblog/Inconsolata-Regular.ttf", "/awmblog/SourceSansPro-Regular.otf",
+                "/awmblog/ArbutusSlab-Regular.ttf", "/awmblog/Rasa-Medium.ttf", "/awmblog/Yrsa-Medium.ttf",
+                "/awmblog/FanwoodText-Regular.ttf",  "/awmblog/SpectralSC-Medium.ttf", "/awmblog/Rasa-Regular.ttf",
+                "/awmblog/login.html"}
 func main() {
     cache = make(map[string]Post)
     hmacKey = make([]byte,32)
