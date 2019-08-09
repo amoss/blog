@@ -504,6 +504,7 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
                                      Expires:time.Now().Add(time.Minute*10)})
 
     sessions[loginKey] = &Session{Name:userInfo.Name,Profile:userInfo.Profile,Email:userInfo.Email,Sub:userInfo.Sub,token:oauth2Token,provider:provider}
+    fmt.Println("Create session: %s",sessions[loginKey])
     http.Redirect(out, req, original, http.StatusFound)
 }
 
