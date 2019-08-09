@@ -212,7 +212,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
             session, _ = sessions[string(loginKey)]
         }
     }
-    sessionBar := session.GenerateBar(req.URL.Path)
+    sessionBar := session.GenerateBar()
 
     /*if err==http.ErrNoCookie {
         session = nil
@@ -488,11 +488,11 @@ func logoutHandler(out http.ResponseWriter, req *http.Request) {
                                      Expires:time.Now().Add(-time.Minute*24*60)})
     referer := req.Header.Get("Referer")
     refUrl,err := url.Parse(referer)
-    if len(referer)==0  ||  err!=nil {              // This serves no purpose - we use the from parameter....
+    if len(referer)==0  ||  err!=nil {    
         http.Error(out, "Referer was made of hairy bollocks", http.StatusInternalServerError)
         return
     }
-    original := refUrl.Query().Get("from")
+    original := refUrl.Path
     http.Redirect(out, req, original, http.StatusFound)
 }
 

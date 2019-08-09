@@ -23,14 +23,14 @@ type Session struct {
 
 var sessions map[string] *Session = make(map[string]*Session)
 
-func (self *Session) GenerateBar(page string) []byte {
+func (self *Session) GenerateBar() []byte {
     var bar []byte
     if self==nil {
         bar = []byte(fmt.Sprintf(`<div class="session">Login with: 
-<a href="/awmblog/auth?provider=google&from=%s">Google</a>
-Twitter  Facebook Local</a></div>`, page))
+<a href="/awmblog/auth?provider=google">Google</a>
+Twitter  Facebook Local</a></div>`))
     } else {
-        bar = []byte(fmt.Sprintf("<div class=\"session\"> Logged as %s. <a href=\"/awmblog/logout?from=%s\">Log out</a></div>", self.Name, page))
+        bar = []byte(fmt.Sprintf("<div class=\"session\"> Logged as %s. <a href=\"/awmblog/logout\">Log out</a></div>", self.Name))
     }
     return bar
 }
