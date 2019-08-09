@@ -364,7 +364,7 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
         http.Error(out, "Referer was made of hairy bollocks", http.StatusInternalServerError)
         return
     }
-    original := refUrl.Query().Get("from")
+    original := refUrl.Path
     stateData := fmt.Sprintf("%s|%s",provName,original)
     encState := msgMac(stateData)
     http.Redirect(out, req, config.AuthCodeURL(encState), http.StatusFound)
@@ -393,8 +393,9 @@ func checkMac(mac string) ([]byte, bool) {
     stateHmac.Write([]byte(msg))
     newSig := stateHmac.Sum(nil)
 
-    fmt.Println("checkMac failed to match sig %s vs %s",oldSig,newSig)
-    return msg, hmac.Equal(oldSig,newSig)
+    match := hmac.Equal(oldSig,newSig)
+    if !match { fmt.Println("checkMac failed to match sig %s vs %s",oldSig,newSig) }
+    return msg, match
 }
 
 func doRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
