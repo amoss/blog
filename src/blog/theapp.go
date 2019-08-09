@@ -330,36 +330,7 @@ func staticHandler(out http.ResponseWriter, req *http.Request) {
   out.Write(cnt)
 }
 
-func secureHandler(out http.ResponseWriter, req *http.Request) {
-    token,err := req.Cookie("login")
-    if err==http.ErrNoCookie {
-        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path)
-        out.Header().Set("Location",target)
-        out.WriteHeader(http.StatusFound)
-        return
-    } else if err!=nil {
-        http.Error(out, errors.New("Something went wrong :(").Error(),
-                                   http.StatusInternalServerError)
-        return
-    }
 
-    loginKey,ok := checkMac(token.Value)
-    s,found := sessions[string(loginKey)]
-
-    if !ok || !found {
-        fmt.Printf("Bad session cookie: %s -> %s (%s,%s)\n", token.Value, loginKey, ok, found)
-        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path[1:])  // Lead leading slash
-        // The golang Redirect is based off an obsolete RFC so it forces the URL to absolute
-        out.Header().Set("Location",target)
-        out.WriteHeader(http.StatusFound)
-        //http.Redirect(out, req, target, http.StatusFound)
-        return
-
-    } else {
-        fmt.Fprintf(out, "In you are, %s from %s\n",s.Name,s.provider)
-    }
-
-}
 
 
 var providers = map[string]*oauth2.Config{
@@ -501,15 +472,26 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
 
     http.SetCookie(out, &http.Cookie{Name:"login",
                                      Value:encLogin,
-                                     Expires:time.Now().Add(time.Minute*10)})
+                                     Expires:time.Now().Add(time.Minute*60)})
 
     sessions[loginKey] = &Session{Name:userInfo.Name,Profile:userInfo.Profile,Email:userInfo.Email,Sub:userInfo.Sub,token:oauth2Token,provider:provider}
     fmt.Println("Create session: %s",sessions[loginKey])
     http.Redirect(out, req, original, http.StatusFound)
 }
 
-//func loginHandler(out http.ResponseWriter, req *http.Request) {
-//}
+func logoutHandler(out http.ResponseWriter, req *http.Request) {
+    http.SetCookie(out, &http.Cookie{Name:"login",
+                                     Value:"",
+                                     Expires:time.Now().Add(-time.Minute*24*60)})
+    referer := req.Header.Get("Referer")
+    refUrl,err := url.Parse(referer)
+    if len(referer)==0  ||  err!=nil {              // This serves no purpose - we use the from parameter....
+        http.Error(out, "Referer was made of hairy bollocks", http.StatusInternalServerError)
+        return
+    }
+    original := refUrl.Query().Get("from")
+    http.Redirect(out, req, original, http.StatusFound)
+}
 
 var whitelist = []string{ "/awmblog/styles.css", "/awmblog/graymaster2.jpg", "/awmblog/Basic-Regular.ttf",
                 "/awmblog/Inconsolata-Regular.ttf", "/awmblog/SourceSansPro-Regular.otf",
@@ -527,11 +509,10 @@ func main() {
     stateHmac = hmac.New(sha256.New,hmacKey)
 
     http.Handle("/awmblog/",         wrapper(http.HandlerFunc(publicHandler)))
-    http.Handle("/awmblog/private/", wrapper(http.HandlerFunc(privateHandler)))
-    http.Handle("/awmblog/secure/",  wrapper(http.HandlerFunc(secureHandler)))
+    http.Handle("/awmblog/private/", wrapper(http.HandlerFunc(privateHandler)))   // Will delete
     http.Handle("/awmblog/auth",     wrapper(http.HandlerFunc(authHandler)))
     http.Handle("/awmblog/callback", wrapper(http.HandlerFunc(callbackHandler)))
-//    http.Handle("/login", http.HandlerFunc(loginHandler))
+    http.Handle("/awmblog/logout",   wrapper(http.HandlerFunc(logoutHandler)))
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
     }

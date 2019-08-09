@@ -30,7 +30,7 @@ func (self *Session) GenerateBar(page string) []byte {
 <a href="/awmblog/auth?provider=google&from=%s">Google</a>
 Twitter  Facebook Local</a></div>`, page))
     } else {
-        bar = []byte(fmt.Sprintf("<div class=\"session\"> Logged as %s. <a href=\"\">Log out</a></div>", self.Name))
+        bar = []byte(fmt.Sprintf("<div class=\"session\"> Logged as %s. <a href=\"/awmblog/logout?from=%s\">Log out</a></div>", self.Name, page))
     }
     return bar
 }
