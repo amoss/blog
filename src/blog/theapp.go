@@ -102,7 +102,7 @@ func ScanPosts() {
     fmt.Printf("%29s: Request serviced in %.1fms\n","ScanPosts",float64(t2.Sub(t1))/float64(time.Millisecond))
 }
 
-func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
+func renderIndex(posts []Post, levelsDeep int, showDrafts bool, sessionBar []byte) []byte {
     result := make([]byte, 0, 16384)
     dates :=  func(i,j int) bool {
         // Sort is in reverse order so newest posts are first
@@ -110,6 +110,7 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
     }
     sort.Slice(posts,dates)
     result = append(result, PageHeader...)
+    result = append(result, sessionBar...)
     result = append(result, []byte(`
 <div class="wblock">
     <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
@@ -196,13 +197,36 @@ func privateHandler(out http.ResponseWriter, req *http.Request) {
       for _,p := range cache {
           posts = append(posts,p)
       }
-      out.Write( renderIndex(posts,1,true) )
+      out.Write( renderIndex(posts,1,true,[]byte("")) )
       return
   }
-  commonHandler(out,req,true)
+  commonHandler(out,req,true,[]byte(""))
 }
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
+    var session *Session = nil
+    token,err := req.Cookie("login")
+    if err==nil {
+        loginKey,ok := checkMac(token.Value)
+        if ok {
+            session, _ = sessions[string(loginKey)]
+        }
+    }
+    sessionBar := session.GenerateBar(req.URL.Path)
+
+    /*if err==http.ErrNoCookie {
+        session = nil
+
+        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path)
+        out.Header().Set("Location",target)
+        out.WriteHeader(http.StatusFound)
+    } else if err!=nil {
+        
+        http.Error(out, errors.New("Something went wrong :(").Error(),
+                                   http.StatusInternalServerError)
+        return
+    }*/
+
   if req.URL.Path=="/awmblog/index.html" {
       ScanPosts()
       posts := make([]Post,0,len(cache))
@@ -211,13 +235,13 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
               posts = append(posts,p)
           }
       }
-      out.Write( renderIndex(posts,0,false) )
+      out.Write( renderIndex(posts,0,false,sessionBar) )
       return
   }
-  commonHandler(out,req,false)
+  commonHandler(out,req,false,sessionBar)
 }
 
-func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool) {
+func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool, sessionBar []byte) {
     if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
         http.Redirect(out,req,req.Header["X-Forwarded-Url"][0]+"index.html",302)
         return
@@ -263,7 +287,7 @@ var reqPath string
             if lines!=nil {
                 fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
                 blocks := rst.Parse(*lines)
-                out.Write( RenderHtml(blocks,showDrafts) )
+                out.Write( RenderHtml(blocks,showDrafts,sessionBar))
             } else {
                 fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)
                 http.Error(out, errors.New("File not found").Error(), http.StatusNotFound)
@@ -332,7 +356,7 @@ func secureHandler(out http.ResponseWriter, req *http.Request) {
         return
 
     } else {
-        fmt.Fprintf(out, "In you are, %s from %s\n",s.user.Name,s.provider)
+        fmt.Fprintf(out, "In you are, %s from %s\n",s.Name,s.provider)
     }
 
 }
@@ -408,20 +432,6 @@ func doRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
         return client.Do(req.WithContext(ctx))
 }
 
-type UserInfo struct {
-    Sub     string
-    Profile string
-    Email   string
-    Name    string
-}
-
-type Session struct {
-    user     UserInfo
-    token   *oauth2.Token
-    provider string
-}
-
-var sessions map[string] Session = make(map[string]Session)
 var hmacKey []byte
 var stateHmac hash.Hash
 
@@ -493,7 +503,7 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
                                      Value:encLogin,
                                      Expires:time.Now().Add(time.Minute*10)})
 
-    sessions[loginKey] = Session{user:userInfo,token:oauth2Token,provider:provider}
+    sessions[loginKey] = &Session{Name:userInfo.Name,Profile:userInfo.Profile,Email:userInfo.Email,Sub:userInfo.Sub,token:oauth2Token,provider:provider}
     http.Redirect(out, req, original, http.StatusFound)
 }
 
