@@ -382,6 +382,7 @@ func msgMac(msg string) string {
 func checkMac(mac string) ([]byte, bool) {
     raw,err := base64.StdEncoding.DecodeString(mac)
     if err!=nil {
+        fmt.Println("checkMac failed to base64 decode state")
         return nil, false
     }
     split   := bytes.LastIndexByte(raw,'|')
@@ -392,6 +393,7 @@ func checkMac(mac string) ([]byte, bool) {
     stateHmac.Write([]byte(msg))
     newSig := stateHmac.Sum(nil)
 
+    fmt.Println("checkMac failed to match sig %s vs %s",oldSig,newSig)
     return msg, hmac.Equal(oldSig,newSig)
 }
 
@@ -415,7 +417,7 @@ func callbackHandler( out http.ResponseWriter, req *http.Request) {
         provider = string(decodeParts[0])
         original = string(decodeParts[1])
     } else {
-        http.Error(out, "State is always the problem %s", http.StatusBadRequest)
+        http.Error(out, "State is always the problem", http.StatusBadRequest)
         return
     }
     config := providers[provider]      // Do they hide state in here?
