@@ -273,6 +273,9 @@ font-size: 18px;
 line-height: 1.3;
 text-align: justify;
 text-justify: inter-word;
+margin: 0;
+padding: 0;
+background-image: url(/awmblog/graymaster2.jpg);
       }
 
 

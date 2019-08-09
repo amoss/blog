@@ -109,7 +109,7 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool) []byte {
         return posts[i].Date.After(posts[j].Date)
     }
     sort.Slice(posts,dates)
-    result = append(result, MakePageHeader(levelsDeep)...)
+    result = append(result, PageHeader...)
     result = append(result, []byte(`
 <div class="wblock">
     <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
@@ -300,10 +300,9 @@ func staticHandler(out http.ResponseWriter, req *http.Request) {
   target := "data/" + filepath.Base(req.URL.Path)
   fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
   cnt,_ := ioutil.ReadFile(target)
-  /* No svg in the blog whitelist
   switch path.Ext(req.URL.Path) {
-      case ".svg": out.Header().Set("Content-type", "image/svg+xml")
-  } */
+      case ".css": out.Header().Set("Content-type", "text/css")
+  }
   out.Write(cnt)
 }
 
@@ -311,10 +310,8 @@ func secureHandler(out http.ResponseWriter, req *http.Request) {
     token,err := req.Cookie("login")
     if err==http.ErrNoCookie {
         target := fmt.Sprintf("../login.html?from=%s",req.URL.Path)
-        // The golang Redirect is based off an obsolete RFC so it forces the URL to absolute
         out.Header().Set("Location",target)
         out.WriteHeader(http.StatusFound)
-        //http.Redirect(out, req, target, http.StatusFound)
         return
     } else if err!=nil {
         http.Error(out, errors.New("Something went wrong :(").Error(),
