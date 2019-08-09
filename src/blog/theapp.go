@@ -243,7 +243,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
 
 func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool, sessionBar []byte) {
     if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
-        http.Redirect(out,req,req.Header["X-Forwarded-Url"][0]+"index.html",302)
+        http.Redirect(out,req,req.URL.Path+"index.html",302)
         return
     }
 
