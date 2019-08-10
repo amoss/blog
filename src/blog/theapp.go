@@ -185,23 +185,6 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool, sessionBar []byt
     return result
 }
 
-func privateHandler(out http.ResponseWriter, req *http.Request) {
-  if req.Header["Eppn"][0] != "awm@bth.se" {
-      http.Error(out, errors.New("There is a charm about the forbidden that makes it unspeakably desirable - Mark Twain.").Error(),
-                 http.StatusForbidden)
-      return
-  }
-  if req.URL.Path=="/private/index.html" {
-      ScanPosts()
-      posts := make([]Post,0,len(cache))
-      for _,p := range cache {
-          posts = append(posts,p)
-      }
-      out.Write( renderIndex(posts,1,true,[]byte("")) )
-      return
-  }
-  commonHandler(out,req,true,[]byte(""))
-}
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
     var session *Session = nil
@@ -214,31 +197,24 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
     }
     sessionBar := session.GenerateBar()
 
-    /*if err==http.ErrNoCookie {
-        session = nil
-
-        target := fmt.Sprintf("../login.html?from=%s",req.URL.Path)
-        out.Header().Set("Location",target)
-        out.WriteHeader(http.StatusFound)
-    } else if err!=nil {
-        
-        http.Error(out, errors.New("Something went wrong :(").Error(),
-                                   http.StatusInternalServerError)
-        return
-    }*/
+    showDrafts := false
+    if session!=nil {
+        fmt.Printf("Session: %s / %s\n", session.Name, session.provider)
+        if session.provider=="local" && session.Name=="amoss" { showDrafts = true }
+    }
 
   if req.URL.Path=="/awmblog/index.html" {
       ScanPosts()
       posts := make([]Post,0,len(cache))
       for _,p := range cache {
-          if !p.Draft {
+          if !p.Draft || showDrafts {
               posts = append(posts,p)
           }
       }
-      out.Write( renderIndex(posts,0,false,sessionBar) )
+      out.Write( renderIndex(posts,0,showDrafts,sessionBar) )
       return
   }
-  commonHandler(out,req,false,sessionBar)
+  commonHandler(out,req,showDrafts,sessionBar)
 }
 
 func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool, sessionBar []byte) {
@@ -251,9 +227,6 @@ var reqPath string
     reqPath = req.URL.Path
     if strings.HasPrefix(reqPath,"/awmblog") {
         reqPath = reqPath[8:]
-    }
-    if showDrafts {
-      reqPath = reqPath[8:]     // Eat "/private/" -> "/"
     }
 
     mime,ok := mimeTypes[ path.Ext(reqPath) ]
@@ -533,7 +506,6 @@ func main() {
     stateHmac = hmac.New(sha256.New,hmacKey)
 
     http.Handle("/awmblog/",           wrapper(http.HandlerFunc(publicHandler)))
-    http.Handle("/awmblog/private/",   wrapper(http.HandlerFunc(privateHandler)))   // Will delete
     http.Handle("/awmblog/auth",       wrapper(http.HandlerFunc(authHandler)))
     http.Handle("/awmblog/callback",   wrapper(http.HandlerFunc(callbackHandler)))
     http.Handle("/awmblog/logout",     wrapper(http.HandlerFunc(logoutHandler)))
