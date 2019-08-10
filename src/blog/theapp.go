@@ -352,6 +352,27 @@ var userInfos = map[string]string {
 
 func authHandler(out http.ResponseWriter, req *http.Request) {
     provName := req.URL.Query().Get("provider")
+    if provName=="local" {
+        if err := req.ParseForm(); err!=nil {
+            http.Error(out, "Quit fucking around", http.StatusInternalServerError)
+            return
+        }
+        user := req.FormValue("user")
+        pass := req.FormValue("password")
+        original := req.FormValue("from")
+        if user=="amoss" && pass=="CENSORED" {
+            loginKey := fmt.Sprintf("local|1")
+            encLogin := msgMac(loginKey)
+
+            http.SetCookie(out, &http.Cookie{Name:"login",
+                                             Value:encLogin,
+                                             Expires:time.Now().Add(time.Minute*60)})
+
+            sessions[loginKey] = &Session{Name:user,Profile:"",Email:"",Sub:"1",provider:"local"}
+            fmt.Println("Create local session: %s",sessions[loginKey])
+            http.Redirect(out, req, original, http.StatusFound)
+        }
+    }
     config,found := providers[provName]        // Do they hide state in here?
     if !found {
         http.Error(out, "Who the fuck is that?!?", http.StatusInternalServerError)
@@ -511,11 +532,13 @@ func main() {
     }
     stateHmac = hmac.New(sha256.New,hmacKey)
 
-    http.Handle("/awmblog/",         wrapper(http.HandlerFunc(publicHandler)))
-    http.Handle("/awmblog/private/", wrapper(http.HandlerFunc(privateHandler)))   // Will delete
-    http.Handle("/awmblog/auth",     wrapper(http.HandlerFunc(authHandler)))
-    http.Handle("/awmblog/callback", wrapper(http.HandlerFunc(callbackHandler)))
-    http.Handle("/awmblog/logout",   wrapper(http.HandlerFunc(logoutHandler)))
+    http.Handle("/awmblog/",           wrapper(http.HandlerFunc(publicHandler)))
+    http.Handle("/awmblog/private/",   wrapper(http.HandlerFunc(privateHandler)))   // Will delete
+    http.Handle("/awmblog/auth",       wrapper(http.HandlerFunc(authHandler)))
+    http.Handle("/awmblog/callback",   wrapper(http.HandlerFunc(callbackHandler)))
+    http.Handle("/awmblog/logout",     wrapper(http.HandlerFunc(logoutHandler)))
+    http.Handle("/awmblog/local.html", wrapper(http.HandlerFunc(LocalHandler)))
+
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
     }

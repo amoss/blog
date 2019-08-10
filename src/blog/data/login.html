@@ -1,13 +1,12 @@
 <html>
 <body>
-Which of our data-slurping corporate overloads know ye best? Choose wisely.
+<h1>Local site account</h1>
 
-<table>
-<tr><td><a href="auth?provider=google">Google</a></td></tr>
-<tr><td><a href="auth?provider=microsoft">Microsoft</a></td></tr>
-<tr><td><a href="auth?provider=facebook">Facebook</a></td></tr>
-<tr><td><a href="auth?provider=twitter">Twitter</a></td></tr>
-<tr><td>Local account</td></tr>
-</table>
+<form action="auth?provider=local" method="post">
+    <p>Username: <input type="text" name="user" /></p>
+    <p>Password: <input type="text" name="password" /></p>
+    <input type="submit" name="submit" value="Submit" />
+</form>
+
 </body>
 </html>
