@@ -11,7 +11,9 @@ import (
 
 var PageHeader = []byte(`<!DOCTYPE html>
 <html lang="en"><head>
+<script src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 <link href="/awmblog/styles.css" type="text/css" rel="stylesheet"/>
+<script type="text/javascript" src="/awmblog/comments.js"></script>
 </head>
 <body> 
 `)
@@ -40,7 +42,7 @@ func inlineStyles(input []byte) []byte {
         nonLit  = strong.ReplaceAll(nonLit,[]byte("<b>$1</b>"))
         nonLit  = emp.ReplaceAll(nonLit, []byte(" <i>$1</i>"))
         result = append(result, nonLit...)
-        fmt.Printf("Inline: %s %s\n", pair,result)
+        //fmt.Printf("Inline: %s %s\n", pair,result)
         switch input[ pair[0]+1 ] {
             case 'm':
                 result = append(result, []byte(`\\((`)... )
@@ -56,7 +58,7 @@ func inlineStyles(input []byte) []byte {
                 result = append(result, []byte(`</span>`)... )
         }
         pos = pair[1]+1
-        fmt.Printf("Inline2: %s %s\n", pair,result)
+        //fmt.Printf("Inline2: %s %s\n", pair,result)
     }
     if pos<len(input) {
         nonLit := links.ReplaceAll(input[pos:], []byte("<a href=\"$2\">$1</a>"))
@@ -76,24 +78,8 @@ var tagNames = map[rst.BlockE]string {
     rst.BlkTableCell: "table" }
 
 
-
-func renderHtml(headBlock rst.Block, input chan rst.Block, showDrafts bool, loginDiv []byte) []byte {
+func renderHeading(headBlock rst.Block) []byte {
     result := make([]byte, 0, 16384)
-    result = append(result, PageHeader...)
-    result = append(result, loginDiv...)
-    result = append(result, []byte(`
-<div class="wblock">
-    <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
-    <h1>Avoiding The Needless Multiplication Of Forms</h1>
-    </div>
-</div>
-`)...)
-
-    _,err := time.Parse("2006-01-02",string(headBlock.Date))
-    if err!=nil && !showDrafts {
-      return []byte("Good things comes to those who wait.")
-    }
-
     result = append(result, []byte("<div class=\"rblock\" style=\"color:#c8c7ac;text-align:right\">")... )
     result = append(result, []byte("<h2 style=\"text-align:right\">")... )
     result = append(result, inlineStyles(headBlock.Title)... )
@@ -105,6 +91,12 @@ func renderHtml(headBlock rst.Block, input chan rst.Block, showDrafts bool, logi
     result = append(result, headBlock.Date... )
     result = append(result, []byte("</p>")... )
     result = append(result, []byte("</div>")... )
+    return result
+}
+
+
+func renderHtml(input chan rst.Block) []byte {
+    result := make([]byte, 0, 16384)
     lastKind := rst.BlkParagraph
     for blk := range input {
         if tagNames[lastKind]!="" && tagNames[blk.Kind]!=tagNames[lastKind] {
@@ -204,17 +196,34 @@ func renderHtml(headBlock rst.Block, input chan rst.Block, showDrafts bool, logi
         }
         lastKind = blk.Kind
     }
-    result = append(result, PageFooter...)
+    //result = append(result, PageFooter...)
     return result
 }
 
-func RenderHtml(input chan rst.Block, showDrafts bool, loginDiv []byte) []byte {
+func RenderPage(input chan rst.Block, showDrafts bool, loginDiv []byte) []byte {
     headBlock := <-input
     if headBlock.Kind!=rst.BlkBigHeading {
         var bstr string
         fmt.Sprintf(bstr,"%s",headBlock)
         panic("Parser is not sending the BigHeading first! "+bstr)
     }
-    return renderHtml(headBlock,input,showDrafts,loginDiv)
+    result := make([]byte, 0, 16384)
+    result = append(result, PageHeader...)
+    result = append(result, loginDiv...)
+    result = append(result, []byte(`
+<div class="wblock">
+    <div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
+    <h1>Avoiding The Needless Multiplication Of Forms</h1>
+    </div>
+</div>
+`)...)
+
+    _,err := time.Parse("2006-01-02",string(headBlock.Date))
+    if err!=nil && !showDrafts {
+      return []byte("Good things comes to those who wait.")
+    }
+    result = append(result, renderHeading(headBlock)...)
+    result = append(result, renderHtml(input)...)
+    return result
 }
 

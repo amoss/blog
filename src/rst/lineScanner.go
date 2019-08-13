@@ -1,11 +1,12 @@
 package rst
 import (
-    "runtime/debug"
-    "os"
     "bufio"
-    "regexp"
     "bytes"
+    "io"
     "fmt"
+    "os"
+    "regexp"
+    "runtime/debug"
 )
 var LineScannerDbg bool = false
 type LineClassE int
@@ -98,12 +99,24 @@ func classify(line []byte) LineClass {
 
 }
 
-func LineScanner(path string) *chan LineClass {
-    output := make(chan LineClass)
 
+func LineScannerBytes(lines []byte) *chan LineClass {
+    return LineScanner( bytes.NewReader(lines) )
+}
+
+
+func LineScannerPath(path string) *chan LineClass {
     fd,err := os.Open(path)
     if err!=nil { return nil }
-    scanner := bufio.NewScanner(fd)
+    return LineScanner(fd)
+}
+
+
+func LineScanner(reader io.Reader) *chan LineClass {
+
+    output := make(chan LineClass)
+
+    scanner := bufio.NewScanner(reader)
     go func() {
         defer func() {
             output <- LineClass{kind:EOF}

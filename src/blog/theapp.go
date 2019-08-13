@@ -6,7 +6,7 @@ import (
     "crypto/sha256"
     "crypto/hmac"
     "crypto/rand"
-    "encoding/base64"
+    //"encoding/base64"
     "encoding/json"
     "errors"
     "hash"
@@ -23,6 +23,7 @@ import (
     "time"
 
     "rst"
+    "github.com/gorilla/websocket"
     "golang.org/x/oauth2"
 )
 
@@ -72,7 +73,7 @@ func ScanPosts() {
                 // Check if the post in the cache is up-to-date, rescan if not.
                 if post.FileMod!=mdata.ModTime() || post.FileSize!=mdata.Size() {
                     fmt.Printf("Cache detected change: reparsing %s\n",entry.Name())
-                    lines  := rst.LineScanner("data/"+entry.Name())
+                    lines  := rst.LineScannerPath("data/"+entry.Name())
                     if lines!=nil {
                         blocks := rst.Parse(*lines)
                         headBlock := <-blocks
@@ -187,37 +188,27 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool, sessionBar []byt
 
 
 func publicHandler(out http.ResponseWriter, req *http.Request) {
-    var session *Session = nil
-    token,err := req.Cookie("login")
-    if err==nil {
-        loginKey,ok := checkMac(token.Value)
-        if ok {
-            session, _ = sessions[string(loginKey)]
-        }
-    }
-    sessionBar := session.GenerateBar()
+    session, sessionBar := Find(req)
 
     showDrafts := false
-    if session!=nil {
-        fmt.Printf("Session: %s / %s\n", session.Name, session.provider)
-        if session.provider=="local" && session.Name=="amoss" { showDrafts = true }
-    }
+    fmt.Printf("Session: %s / %s\n", session.Name, session.provider)
+    if session.provider=="local" && session.Name=="amoss" { showDrafts = true }
 
-  if req.URL.Path=="/awmblog/index.html" {
-      ScanPosts()
-      posts := make([]Post,0,len(cache))
-      for _,p := range cache {
-          if !p.Draft || showDrafts {
-              posts = append(posts,p)
-          }
-      }
-      out.Write( renderIndex(posts,0,showDrafts,sessionBar) )
-      return
-  }
-  commonHandler(out,req,showDrafts,sessionBar)
+    if req.URL.Path=="/awmblog/index.html" {
+        ScanPosts()
+        posts := make([]Post,0,len(cache))
+        for _,p := range cache {
+            if showDrafts || !p.Draft {
+                posts = append(posts,p)
+            }
+        }
+        out.Write( renderIndex(posts,0,showDrafts,sessionBar) )
+        return
+    }
+    commonHandler(out,req,showDrafts,session,sessionBar)
 }
 
-func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool, sessionBar []byte) {
+func commonHandler(out http.ResponseWriter, req *http.Request, showDrafts bool, session *Session, sessionBar []byte) {
     if req.URL.Path[ len(req.URL.Path)-1 ] == '/' {
         http.Redirect(out,req,req.URL.Path+"index.html",302)
         return
@@ -256,11 +247,19 @@ var reqPath string
                 out.Write( []byte("File not found") )
                 return
             }
-            lines  := rst.LineScanner(filename)
+            lines  := rst.LineScannerPath(filename)
             if lines!=nil {
                 fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
                 blocks := rst.Parse(*lines)
-                out.Write( RenderHtml(blocks,showDrafts,sessionBar))
+                out.Write( RenderPage(blocks,showDrafts,sessionBar))
+                out.Write( []byte(`<div class="wblock"><h1>Comments</h1></div>`) )
+                out.Write( CommentDemo )
+                if session.provider=="none" {
+                    out.Write([]byte(`<div class="wblock"><p>Sign in at the top of the page to leave a comment</p></div>`))
+                } else {
+                    out.Write( CommentEditor(session) )
+                }
+                out.Write( PageFooter )
             } else {
                 fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)
                 http.Error(out, errors.New("File not found").Error(), http.StatusNotFound)
@@ -274,6 +273,9 @@ var reqPath string
     }
 }
 
+
+/* Logging request, profiling handler time and catching panics.
+*/
 func wrapper(handler http.Handler) http.Handler {
   return http.HandlerFunc( func(out http.ResponseWriter, req *http.Request) {
     t := time.Now()
@@ -293,16 +295,104 @@ func wrapper(handler http.Handler) http.Handler {
 }
 
 
+/* Whitelisting to prevent attacks that escape the data/ directory.
+*/
 func staticHandler(out http.ResponseWriter, req *http.Request) {
   target := "data/" + filepath.Base(req.URL.Path)
   fmt.Printf("%29s: Path whitelisted - served from %s\n", "handler", target)
   cnt,_ := ioutil.ReadFile(target)
   switch path.Ext(req.URL.Path) {
       case ".css": out.Header().Set("Content-type", "text/css")
+      case ".js" : out.Header().Set("Content-type", "application/javascript")
   }
   out.Write(cnt)
 }
 
+
+func cuteDate(d time.Time) string {
+    now := time.Now()
+    dt  := now.Sub(d)
+    if dt.Hours() < 20 {
+        return d.Format("15:04")
+    } else if dt.Hours() < 6*24 {
+        return d.Format("Mon 15:04")
+    } else if now.Year() == d.Year() {
+        return d.Format("Mon Jan 2 (15:04)")
+    } else {
+        return d.Format("2006 Jan 2 (15:04)")
+    }
+}
+
+type WsMsg struct {
+    Action string
+    Body   string
+}
+
+func reader(conn *websocket.Conn) {
+    _, p, err := conn.ReadMessage()
+    fmt.Printf("Initial message: %s\n", p)
+    if err != nil {
+            fmt.Println(err)
+            return
+        }
+    cookie := string(p)
+    if cookie[:6]!="login=" {
+        fmt.Printf("ws did not authenticate! %s\n", cookie[:6])
+        conn.Close(); 
+        return 
+    }
+    loginKey,ok := checkMac( cookie[6:] )
+    if !ok {
+        fmt.Printf("MAC check failed\n")
+        conn.Close()
+        return
+    }
+
+    s,ok := sessions[ string(loginKey) ]
+    if !ok {
+        fmt.Printf("Session not found? %s\n", loginKey);
+        conn.Close();
+        return
+    }
+
+    for {
+    // read in a message
+        _, p, err := conn.ReadMessage()
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+        msg := WsMsg{}
+        json.Unmarshal(p,&msg)
+        fmt.Printf("%s-->%s\n",p,msg)
+        if msg.Action=="preview" {
+            lines  := rst.LineScannerBytes([]byte(msg.Body))
+            if lines!=nil {
+                blocks := rst.Parse(*lines)
+                html := make([]byte,4096)
+                html = append(html, []byte(fmt.Sprintf(`<div class="wblock"><h2>%s/%s at %s commented:</h2></div>`, s.Name, s.provider, cuteDate(time.Now())))...)
+                html = append(html,renderHtml(blocks)...)
+                //fmt.Printf("%s: %s\n", messageType, html)
+                conn.WriteMessage(1, html)
+            }
+        }
+    }
+}
+
+
+
+func wsHandler(out http.ResponseWriter, req *http.Request) {
+    fmt.Printf("Incoming ws\n")
+    upgrader := websocket.Upgrader{ ReadBufferSize: 1024, WriteBufferSize: 1024 }
+    upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+    ws, err  := upgrader.Upgrade(out, req, nil)
+    if err!=nil {
+        fmt.Printf("Error on ws upgrade: %s\n", err.Error())
+        return
+    }
+    reader(ws)
+
+}
 
 
 
@@ -362,34 +452,6 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
     stateData := fmt.Sprintf("%s|%s",provName,original)
     encState := msgMac(stateData)
     http.Redirect(out, req, config.AuthCodeURL(encState), http.StatusFound)
-}
-
-
-func msgMac(msg string) string {
-    stateHmac.Reset()
-    stateHmac.Write([]byte(msg))
-    mac := stateHmac.Sum(nil)
-    state := fmt.Sprintf("%s|%s",msg,mac)
-    return base64.StdEncoding.EncodeToString([]byte(state))
-}
-
-func checkMac(mac string) ([]byte, bool) {
-    raw,err := base64.StdEncoding.DecodeString(mac)
-    if err!=nil {
-        fmt.Println("checkMac failed to base64 decode state")
-        return nil, false
-    }
-    split   := bytes.LastIndexByte(raw,'|')
-    msg     := raw[:split]
-    oldSig  := raw[split+1:]
-
-    stateHmac.Reset()
-    stateHmac.Write([]byte(msg))
-    newSig := stateHmac.Sum(nil)
-
-    match := hmac.Equal(oldSig,newSig)
-    if !match { fmt.Println("checkMac failed to match sig %s vs %s",oldSig,newSig) }
-    return msg, match
 }
 
 func doRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
@@ -490,11 +552,11 @@ func logoutHandler(out http.ResponseWriter, req *http.Request) {
     http.Redirect(out, req, original, http.StatusFound)
 }
 
-var whitelist = []string{ "/awmblog/styles.css", "/awmblog/graymaster2.jpg", "/awmblog/Basic-Regular.ttf",
+var whitelist = []string{ "/awmblog/styles.css",    "/awmblog/graymaster2.jpg", "/awmblog/Basic-Regular.ttf",
                 "/awmblog/Inconsolata-Regular.ttf", "/awmblog/SourceSansPro-Regular.otf",
                 "/awmblog/ArbutusSlab-Regular.ttf", "/awmblog/Rasa-Medium.ttf", "/awmblog/Yrsa-Medium.ttf",
-                "/awmblog/FanwoodText-Regular.ttf",  "/awmblog/SpectralSC-Medium.ttf", "/awmblog/Rasa-Regular.ttf",
-                "/awmblog/login.html"}
+                "/awmblog/FanwoodText-Regular.ttf", "/awmblog/SpectralSC-Medium.ttf", "/awmblog/Rasa-Regular.ttf",
+                "/awmblog/login.html",              "/awmblog/comments.js" }
 func main() {
     cache = make(map[string]Post)
     hmacKey = make([]byte,32)
@@ -510,6 +572,7 @@ func main() {
     http.Handle("/awmblog/callback",   wrapper(http.HandlerFunc(callbackHandler)))
     http.Handle("/awmblog/logout",     wrapper(http.HandlerFunc(logoutHandler)))
     http.Handle("/awmblog/local.html", wrapper(http.HandlerFunc(LocalHandler)))
+    http.HandleFunc("/awmblog/preview",  wsHandler)
 
     for _,p := range whitelist {
       http.Handle(p, wrapper(http.HandlerFunc(staticHandler)))
