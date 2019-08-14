@@ -6,7 +6,7 @@ function submitComment()
     var but = document.getElementById('submitButton');
     if( previewSocket instanceof WebSocket && previewSocket.readyState===1) 
     {
-        previewSocket.send( JSON.stringify({"action":"post","body":src.value}) );
+        previewSocket.send( JSON.stringify({"action":"post","url":document.URL, "body":src.value}) );
         but.disabled = "disable";
         but.value    = "Submitting...";
     }

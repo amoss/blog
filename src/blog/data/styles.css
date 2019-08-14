@@ -2,7 +2,12 @@
   border: none;
   left:auto;
   right: auto;
-  width:100%
+  width:100%;
+}
+
+.comment {
+  margin-left:18%;
+  margin-right:18%;
 }
 
 .comment .rblock {

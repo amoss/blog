@@ -4,8 +4,9 @@ import (
     "fmt"
     "regexp"
     "html"
+//    "time"
+
     "rst"
-    "time"
 )
 
 
@@ -200,6 +201,7 @@ func renderHtml(input chan rst.Block) []byte {
     return result
 }
 
+/*  Split between the cache.Lookup and the commonHandler() now...
 func RenderPage(input chan rst.Block, showDrafts bool, loginDiv []byte) []byte {
     headBlock := <-input
     if headBlock.Kind!=rst.BlkBigHeading {
@@ -225,5 +227,5 @@ func RenderPage(input chan rst.Block, showDrafts bool, loginDiv []byte) []byte {
     result = append(result, renderHeading(headBlock)...)
     result = append(result, renderHtml(input)...)
     return result
-}
+}*/
 

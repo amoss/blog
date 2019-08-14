@@ -1,5 +1,17 @@
 package main
 
+import (
+    "errors"
+    "fmt"
+    "net/url"
+    "os"
+    "path/filepath"
+    "strings"
+    "time"
+
+    "rst"
+)
+
 var CommentDemo = []byte(`<div class="wblock"><a href="javascript:showDemo()">Markdown syntax...</a></div>
                           <div class="wblock" id="commentDemo" style="visibility: hidden; display: none">
                 <div style="display: inline-block; width:45%; float:left; background: #cccccc; white-space:pre; color: #444444; font-family: 'monospace'">
@@ -33,10 +45,57 @@ func CommentEditor(session *Session) []byte {
                 </form>
             </div>
             
-            <div id="comPreview" class="comment" style="display: inline-block; width:45%; margin-left:8%; float;right; border:1px solid #666666">
+            <div id="comPreview" class="comment" style="display: inline-block; width:45%; margin-left:8%; margin-right:0; float;right; border:1px solid #666666">
             </div><div style="clear:both"></div>
 </div>`)
 }
                 /*<form>
                 <input type="textarea" name="comment" rows="10" style="height:100%"/>
                 </form>*/
+
+type Comment struct {
+    Name     string
+    Provider string
+    Sub      string
+    Email    string
+    Body     string
+    When     time.Time
+    Html     []byte
+}
+
+func PostComment(ustr string, s *Session, body string) error {
+    u,err := url.Parse(ustr)
+    fmt.Println(u)
+    if err!=nil { return err }
+    if !u.IsAbs() || filepath.Base(u.Path)!="index.html" || !strings.HasPrefix(u.Path,"/awmblog") {
+        return errors.New("Url is absolute garbage")
+    }
+    postPath := u.Path[8:]                           // e.g. "awmblog/blah/index.html" -> "/blah/index.html"
+    fmt.Printf("URL Path is %s\n",u.Path)
+    parent := filepath.Base(filepath.Dir(postPath))  // e.g. ... -> "blah"
+    filename := "data/" + parent + ".rst"             // e.g. ... -> "data/blah.rst"
+    fmt.Printf("Checking %s\n", filename)
+    outsideFI, _ := os.Stat(filename)
+    if outsideFI==nil { return errors.New("Url is garbage") }
+
+    newComm := Comment{ Name:s.Name, Provider:s.provider, Sub:s.Sub, Email:s.Email, Body:body, When:time.Now() }
+    lines  := rst.LineScannerBytes([]byte(body))
+    if lines!=nil {
+        blocks := rst.Parse(*lines)
+        newComm.Html = make([]byte,4096)
+        newComm.Html = append(newComm.Html, []byte(fmt.Sprintf(`<div class="wblock"><h2>%s/%s at %s commented:</h2></div>`, s.Name, s.provider, cuteDate(newComm.When)))...)
+        newComm.Html = append(newComm.Html,renderHtml(blocks)...)
+    }
+
+    fmt.Printf("New comment: %s\n", newComm)
+    post,ok := cache[parent]
+    if ok {
+        fmt.Printf("Located post: %s\n", post)
+    } else {
+        for k := range cache {
+            fmt.Printf("Not in cache: %s\n", k)
+        }
+    }
+    post.Comments = append(post.Comments,newComm)
+    return nil
+}

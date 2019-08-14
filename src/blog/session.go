@@ -53,6 +53,9 @@ func Find(req *http.Request) (*Session,[]byte) {
         loginKey,ok := checkMac(token.Value)
         if ok {
             session, _ = sessions[string(loginKey)]
+            if session==nil { fmt.Printf("Error? %s %s\n", session, sessions ) }
+        } else {
+            fmt.Printf("Login %v failed mac check\n",token.Value)
         }
     }
     if session==nil {
@@ -111,6 +114,6 @@ func checkMac(mac string) ([]byte, bool) {
     newSig := stateHmac.Sum(nil)
 
     match := hmac.Equal(oldSig,newSig)
-    if !match { fmt.Println("checkMac failed to match sig %s vs %s",oldSig,newSig) }
+    if !match { fmt.Printf("checkMac failed to match sig %v vs %v",oldSig,newSig) }
     return msg, match
 }

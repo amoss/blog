@@ -36,74 +36,7 @@ var mimeTypes = map[string]string {
     ".png":  "image/png",
 }
 
-type Post struct {
-    Title       []byte
-    Filename    []byte
-    Tags        []byte
-    Date        time.Time
-    FileMod     time.Time
-    FileSize    int64
-    Subtitle    []byte
-    Draft       bool
-}
-
-var cache map[string]Post
-
-func ScanPosts() {
-    t1 := time.Now()
-    files, err := ioutil.ReadDir("data")
-    if err!=nil {
-        fmt.Printf("Error scanning data: %s\n", err.Error())
-        return
-    }
-    for _,entry := range files {
-        if path.Ext(entry.Name())==".rst" {
-            mdata,err := os.Stat("data/"+entry.Name())
-            if err!=nil {
-                fmt.Printf("Error calling stat: %s\n", err.Error())
-            } else {
-                post,present := cache[entry.Name()]
-                // Check if the post is cached, if not create a placeholder.
-                if !present {
-                    bName := strings.TrimSuffix( entry.Name(), path.Ext(entry.Name()) )
-                    linkName := []byte( bName + "/index.html" )
-                    post = Post{Filename:linkName, Draft:true}
-                    cache[entry.Name()] = post
-                }
-                // Check if the post in the cache is up-to-date, rescan if not.
-                if post.FileMod!=mdata.ModTime() || post.FileSize!=mdata.Size() {
-                    fmt.Printf("Cache detected change: reparsing %s\n",entry.Name())
-                    lines  := rst.LineScannerPath("data/"+entry.Name())
-                    if lines!=nil {
-                        blocks := rst.Parse(*lines)
-                        headBlock := <-blocks
-                        for x := range blocks { x = x}
-                        pTime,err := time.Parse("2006-01-02",string(headBlock.Date))
-                        if err!=nil {
-                            pTime = time.Now()       // Push "Draft" posts to top
-                        } else {
-                            post.Draft = false
-                        }
-                        post.Title    = headBlock.Title
-                        post.Date     = pTime
-                        post.Tags     = headBlock.Tags
-                        post.Subtitle = headBlock.Subtitle
-                    } else {
-                        fmt.Printf("Error in the line scanner?\n")
-                    }
-                }
-                // Regardless of path to this point, mark cached data as up-to-date.
-                post.FileMod  = mdata.ModTime()
-                post.FileSize = mdata.Size()
-                cache[entry.Name()] = post
-            }
-        }
-    }
-    t2 := time.Now()
-    fmt.Printf("%29s: Request serviced in %.1fms\n","ScanPosts",float64(t2.Sub(t1))/float64(time.Millisecond))
-}
-
-func renderIndex(posts []Post, levelsDeep int, showDrafts bool, sessionBar []byte) []byte {
+func renderIndex(posts []*Post, levelsDeep int, showDrafts bool, sessionBar []byte) []byte {
     result := make([]byte, 0, 16384)
     dates :=  func(i,j int) bool {
         // Sort is in reverse order so newest posts are first
@@ -132,7 +65,7 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool, sessionBar []byt
         result = append(result, p.Title...)
         result = append(result, []byte("</td>")...)
         result = append(result, []byte("<td><a href=\"")...)
-        result = append(result, p.Filename...)
+        result = append(result, p.URL...)
         result = append(result, []byte("\">")...)
         result = append(result, p.Subtitle...)
         result = append(result, []byte("</a></td></tr>")...)
@@ -145,11 +78,11 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool, sessionBar []byt
 </div>
 <div class="pblock"><div class="pinner">
 `)...)
-    bySeries := make( map[ string ] []Post )
+    bySeries := make( map[ string ] []*Post )
     for _,p := range posts {
         pStr := string(p.Title)
         if bySeries[pStr] == nil {
-            bySeries[pStr] = make([]Post,0)
+            bySeries[pStr] = make([]*Post,0)
         }
         bySeries[pStr] = append( bySeries[pStr], p)
     }
@@ -174,7 +107,7 @@ func renderIndex(posts []Post, levelsDeep int, showDrafts bool, sessionBar []byt
             result = append(result, p.Date.Format("2006 Jan _2 Mon")...)
             result = append(result, []byte("</td>")...)
             result = append(result, []byte("<td><a href=\"")...)
-            result = append(result, p.Filename...)
+            result = append(result, p.URL...)
             result = append(result, []byte("\">")...)
             result = append(result, p.Subtitle...)
             result = append(result, []byte("</a></td></tr>")...)
@@ -196,7 +129,7 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
 
     if req.URL.Path=="/awmblog/index.html" {
         ScanPosts()
-        posts := make([]Post,0,len(cache))
+        posts := make([]*Post,0,len(cache))
         for _,p := range cache {
             if showDrafts || !p.Draft {
                 posts = append(posts,p)
@@ -237,33 +170,42 @@ var reqPath string
     } else if path.Ext(reqPath)==".html" {
 
         if strings.HasSuffix(req.URL.Path,"index.html") {
-            dir := path.Dir(reqPath)
-            filename := "data" + dir + ".rst"
-            outsideFI, outsideErr := os.Stat(filename)
-            //fmt.Printf("%s: %s, %s\n", outside, outsideFI, outsideErr)
-            if outsideFI==nil {
+            dir := path.Base(path.Dir(reqPath))
+            post,err := Lookup(dir)
+            if err!=nil {
                 out.WriteHeader(404)
-                fmt.Printf("%29s: Can't resolve %s because %s\n", "handler", filename, outsideErr)
+                fmt.Printf("%29s: Can't resolve %s because %s\n", "handler", dir, err.Error())
                 out.Write( []byte("File not found") )
                 return
             }
-            lines  := rst.LineScannerPath(filename)
-            if lines!=nil {
-                fmt.Printf("%29s: Path default - served from %s\n", "handler", filename)
-                blocks := rst.Parse(*lines)
-                out.Write( RenderPage(blocks,showDrafts,sessionBar))
-                out.Write( []byte(`<div class="wblock"><h1>Comments</h1></div>`) )
-                out.Write( CommentDemo )
-                if session.provider=="none" {
-                    out.Write([]byte(`<div class="wblock"><p>Sign in at the top of the page to leave a comment</p></div>`))
-                } else {
-                    out.Write( CommentEditor(session) )
-                }
-                out.Write( PageFooter )
-            } else {
-                fmt.Printf("%29s: File not found AFTER check! %s\n", "handler", filename)
-                http.Error(out, errors.New("File not found").Error(), http.StatusNotFound)
+
+            out.Write( PageHeader )
+            out.Write( sessionBar )
+            out.Write( []byte(`<div class="wblock">
+<div style="color:white; opacity:1; margin-top:1rem; margin-bottom:1rem">
+    <h1>Avoiding The Needless Multiplication Of Forms</h1>
+    </div>
+</div>
+`))
+            if post.Draft && !showDrafts {
+                out.Write( []byte("Good things come to those who wait.") )
+                return
             }
+
+            out.Write( post.Body )
+            out.Write( []byte(`<div class="wblock"><h1>Comments</h1></div>`) )
+            for _,c := range post.Comments {
+                out.Write( []byte(`<div class="comment">`) )
+                out.Write(c.Html)
+                out.Write( []byte(`</div>`) )
+            }
+            out.Write( CommentDemo )
+            if session.provider=="none" {
+                out.Write([]byte(`<div class="wblock"><p>Sign in at the top of the page to leave a comment</p></div>`))
+            } else {
+                out.Write( CommentEditor(session) )
+            }
+            out.Write( PageFooter )
         }
 
     } else {
@@ -325,6 +267,7 @@ func cuteDate(d time.Time) string {
 
 type WsMsg struct {
     Action string
+    URL    string
     Body   string
 }
 
@@ -375,6 +318,9 @@ func reader(conn *websocket.Conn) {
                 //fmt.Printf("%s: %s\n", messageType, html)
                 conn.WriteMessage(1, html)
             }
+        } else if msg.Action=="post" {
+            err := PostComment(msg.URL, s, msg.Body)
+            if err!=nil { fmt.Printf("posting error: %s",err.Error()) }
         }
     }
 }
@@ -432,7 +378,7 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
                                              Expires:time.Now().Add(time.Minute*60)})
 
             sessions[loginKey] = &Session{Name:user,Profile:"",Email:"",Sub:"1",provider:"local"}
-            fmt.Println("Create local session: %s",sessions[loginKey])
+            fmt.Printf("Create local session: %s -> %s\n",loginKey,sessions[loginKey])
             http.Redirect(out, req, original, http.StatusFound)
         }
     }
@@ -558,7 +504,7 @@ var whitelist = []string{ "/awmblog/styles.css",    "/awmblog/graymaster2.jpg", 
                 "/awmblog/FanwoodText-Regular.ttf", "/awmblog/SpectralSC-Medium.ttf", "/awmblog/Rasa-Regular.ttf",
                 "/awmblog/login.html",              "/awmblog/comments.js" }
 func main() {
-    cache = make(map[string]Post)
+    cache = make(map[string]*Post)
     hmacKey = make([]byte,32)
     _,err := rand.Read(hmacKey)
     if err!=nil {
