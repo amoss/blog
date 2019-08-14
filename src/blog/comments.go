@@ -8,6 +8,8 @@ import (
     "os"
     "net/url"
     "path/filepath"
+    "sort"
+    "strconv"
     "strings"
     "time"
 
@@ -90,7 +92,9 @@ func PostComment(ustr string, s *Session, body string) error {
     }
 
     fmt.Printf("New comment: %s\n", newComm)
+    cacheLock.RLock()
     post,ok := cache[parent]
+    cacheLock.RUnlock()
     if ok {
         fmt.Printf("Located post: %s\n", post)
     } else {
@@ -98,19 +102,29 @@ func PostComment(ustr string, s *Session, body string) error {
             fmt.Printf("Not in cache: %s\n", k)
         }
     }
+    post.Lock.Lock()
     post.Comments = append(post.Comments,newComm)
+    post.Lock.Unlock()
     err = post.Save()
     return err
 }
 
 func (self *Post) Save() error {
+    self.Lock.Lock()
+    defer self.Lock.Unlock()
     files, err := ioutil.ReadDir("var/run/blog")
     if err!=nil  { return err }
     count := 0
+    indices := make([]int,0,128)
     for _, entry := range files {
-        base := strings.TrimSuffix(entry.Name(),filepath.Ext(entry.Name()))
-        if base==self.Key { count += 1 }
+        ext      := filepath.Ext(entry.Name())
+        base     := strings.TrimSuffix(entry.Name(),ext)
+        idx, err := strconv.Atoi(ext[1:])
+        if base==self.Key && err==nil { indices = append(indices, idx) }
     }
+    sort.Ints(indices)
+    if len(indices)>0 { count = indices[len(indices)-1] + 1 }
+
     base := fmt.Sprintf("var/run/blog/%s.%d", self.Key, count)
     fmt.Printf("New backing: %s\n",base)
     f, err := os.Create(base)

@@ -129,12 +129,14 @@ func publicHandler(out http.ResponseWriter, req *http.Request) {
 
     if req.URL.Path=="/awmblog/index.html" {
         ScanPosts()
+        cacheLock.RLock()
         posts := make([]*Post,0,len(cache))
         for _,p := range cache {
             if showDrafts || !p.Draft {
                 posts = append(posts,p)
             }
         }
+        cacheLock.RUnlock()
         out.Write( renderIndex(posts,0,showDrafts,sessionBar) )
         return
     }
@@ -179,6 +181,7 @@ var reqPath string
                 return
             }
 
+            post.Lock.RLock()
             out.Write( PageHeader )
             out.Write( sessionBar )
             out.Write( []byte(`<div class="wblock">
@@ -206,6 +209,7 @@ var reqPath string
                 out.Write( CommentEditor(session) )
             }
             out.Write( PageFooter )
+            post.Lock.RUnlock()
         }
 
     } else {
