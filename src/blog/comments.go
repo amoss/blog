@@ -2,9 +2,11 @@ package main
 
 import (
     "errors"
+    "encoding/json"
     "fmt"
-    "net/url"
+    "io/ioutil"
     "os"
+    "net/url"
     "path/filepath"
     "strings"
     "time"
@@ -97,5 +99,25 @@ func PostComment(ustr string, s *Session, body string) error {
         }
     }
     post.Comments = append(post.Comments,newComm)
+    err = post.Save()
+    return err
+}
+
+func (self *Post) Save() error {
+    files, err := ioutil.ReadDir("var/run/blog")
+    if err!=nil  { return err }
+    count := 0
+    for _, entry := range files {
+        base := strings.TrimSuffix(entry.Name(),filepath.Ext(entry.Name()))
+        if base==self.Key { count += 1 }
+    }
+    base := fmt.Sprintf("var/run/blog/%s.%d", self.Key, count)
+    fmt.Printf("New backing: %s\n",base)
+    f, err := os.Create(base)
+    if err!=nil  { return err }
+    defer f.Close()
+    encoded,err := json.Marshal(self.Comments)
+    if err!=nil  { return err }
+    _, err = f.Write( encoded )
     return nil
 }

@@ -101,6 +101,7 @@ func msgMac(msg string) string {
 
 func checkMac(mac string) ([]byte, bool) {
     raw,err := base64.StdEncoding.DecodeString(mac)
+    fmt.Printf("checkMac: mac %d bytes -> %d  %v/%v\n", len(mac), len(raw), mac, raw)
     if err!=nil {
         fmt.Println("checkMac failed to base64 decode state")
         return nil, false

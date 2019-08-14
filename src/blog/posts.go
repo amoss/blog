@@ -2,8 +2,11 @@ package main
 
 import (
     "fmt"
+    "encoding/json"
     "os"
-    "path"
+    "path/filepath"
+    "sort"
+    "strconv"
     "strings"
     "time"
     "io/ioutil"
@@ -14,6 +17,7 @@ import (
 type Post struct {
     Title       []byte
     URL         string
+    Key         string
     Tags        []byte
     Date        time.Time
     FileMod     time.Time
@@ -34,7 +38,7 @@ func ScanPosts() {
         return
     }
     for _,entry := range files {
-        if path.Ext(entry.Name())==".rst" {
+        if filepath.Ext(entry.Name())==".rst" {
             name := strings.TrimSuffix(entry.Name(),".rst")
             Lookup(name)
          }
@@ -55,7 +59,7 @@ func Lookup(name string) (*Post,error) {
     post,present := cache[name]
     // Check if the post is cached, if not create a placeholder.
     if !present {
-        post = &Post{URL:"/awmblog/"+name+"/index.html", Draft:true, Comments:make([]Comment,0,4)}
+        post = &Post{URL:"/awmblog/"+name+"/index.html", Key:name, Draft:true, Comments:make([]Comment,0,4)}
         cache[name] = post
     }
 
@@ -83,6 +87,30 @@ func Lookup(name string) (*Post,error) {
         } else {
             fmt.Printf("Error in the line scanner?\n")
         }
+    }
+
+    // Check if there are comment stores for the post and load the most recent
+    files, err := ioutil.ReadDir("var/run/blog")
+    if err==nil  {
+        indices := make([]int,0,128)
+        for _, entry := range files {
+            ext      := filepath.Ext(entry.Name())
+            base     := strings.TrimSuffix(entry.Name(),ext)
+            idx, err := strconv.Atoi(ext[1:])
+            if base==name && err==nil { indices = append(indices, idx) }
+        }
+        sort.Ints(indices)
+        fmt.Printf("Comment backing indices: %v\n",indices)
+        if len(indices)>0 {
+            commentFn := fmt.Sprintf("var/run/blog/%s.%d", name, indices[len(indices)-1] )
+            js,err    := ioutil.ReadFile(commentFn)
+            err = json.Unmarshal(js,&post.Comments)
+            if err!=nil {
+                fmt.Printf("Can't load comments: %s\n", err.Error())
+            }
+        }
+    } else {
+        fmt.Printf("Can't locate comment backing files: %s\n", err.Error() )
     }
 
     // Regardless of path to this point, mark cached data as up-to-date.
