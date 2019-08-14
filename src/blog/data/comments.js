@@ -29,7 +29,16 @@ function openEvent(ev)
 
 function readEvent(ev)
 {
-    document.getElementById('comPreview').innerHTML = ev.data;
+    msg = JSON.parse( ev.data )
+    if(msg.Action=="Preview"){
+        document.getElementById('comPreview').innerHTML = msg.Body;
+    } else if(msg.Action=="Posted"){
+        var but = document.getElementById('submitButton');
+        var src = document.getElementById('comment');
+        src.value = ""
+        but.disabled = false;
+        but.value    = "Add Comment";
+    }
 }
 
 

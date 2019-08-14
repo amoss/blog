@@ -320,11 +320,17 @@ func reader(conn *websocket.Conn) {
                 html = append(html, []byte(fmt.Sprintf(`<div class="wblock"><h2>%s/%s at %s commented:</h2></div>`, s.Name, s.provider, cuteDate(time.Now())))...)
                 html = append(html,renderHtml(blocks)...)
                 //fmt.Printf("%s: %s\n", messageType, html)
-                conn.WriteMessage(1, html)
+                resp := WsMsg { Action:"Preview", Body:string(html) }
+                js,err := json.Marshal(resp)
+                if err==nil { conn.WriteMessage(1, js) } else { fmt.Printf("Preview marshall error:%s\n", err.Error()) }
+
             }
         } else if msg.Action=="post" {
             err := PostComment(msg.URL, s, msg.Body)
             if err!=nil { fmt.Printf("posting error: %s",err.Error()) }
+            resp := WsMsg{Action:"Posted"}
+            js, err := json.Marshal(resp)
+            if err==nil { conn.WriteMessage(1, js) } else { fmt.Printf("Post marshall error:%s\n", err.Error()) }
         }
     }
 }
@@ -384,6 +390,7 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
             sessions[loginKey] = &Session{Name:user,Profile:"",Email:"",Sub:"1",provider:"local"}
             fmt.Printf("Create local session: %s -> %s\n",loginKey,sessions[loginKey])
             http.Redirect(out, req, original, http.StatusFound)
+            return
         }
     }
     config,found := providers[provName]        // Do they hide state in here?
