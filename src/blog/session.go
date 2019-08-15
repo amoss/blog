@@ -106,9 +106,12 @@ func checkMac(mac string) ([]byte, bool) {
         fmt.Println("checkMac failed to base64 decode state")
         return nil, false
     }
-    split   := bytes.LastIndexByte(raw,'|')
-    msg     := raw[:split]
-    oldSig  := raw[split+1:]
+    firstSplit  := bytes.IndexByte(raw,'|')
+    if firstSplit==-1 { return nil, false }
+    secondSplit := firstSplit + 1 + bytes.IndexByte(raw[firstSplit+1:],'|')
+
+    msg     := raw[:secondSplit]
+    oldSig  := raw[secondSplit+1:]
     fmt.Printf("Checking: %s | %v as mac\n", string(msg), oldSig)
 
     stateHmac.Reset()
