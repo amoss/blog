@@ -53,7 +53,7 @@ function commentUpdate()
     if( !(previewSocket instanceof WebSocket) ) 
     {
        // previewSocket = new WebSocket("ws://127.0.0.1:8080/awmblog/preview");
-        previewSocket = new WebSocket("ws://mechani.se/awmblog/preview");
+        previewSocket = new WebSocket("wss://mechani.se/awmblog/preview");
         previewSocket.onerror = errorEvent;
         previewSocket.onopen  = openEvent;
         previewSocket.onmessage = readEvent;
