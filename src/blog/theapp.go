@@ -422,6 +422,7 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
     original := refUrl.Path
     stateData := fmt.Sprintf("%s|%s",provName,original)
     encState := msgMac(stateData)
+    fmt.Printf("Third leg on %s -> %v\n", stateData, encState)
     http.Redirect(out, req, config.AuthCodeURL(encState), http.StatusFound)
 }
 
