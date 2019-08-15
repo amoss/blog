@@ -197,11 +197,13 @@ var reqPath string
 
             out.Write( post.Body )
             out.Write( []byte(`<div class="wblock"><h1>Comments</h1></div>`) )
+            out.Write( []byte(`<div id="thecomments">`) )
             for _,c := range post.Comments {
                 out.Write( []byte(`<div class="comment">`) )
                 out.Write(c.Html)
                 out.Write( []byte(`</div>`) )
             }
+            out.Write( []byte(`</div>`) )
             out.Write( CommentDemo )
             if session.provider=="none" {
                 out.Write([]byte(`<div class="wblock"><p>Sign in at the top of the page to leave a comment</p></div>`))
@@ -326,11 +328,23 @@ func reader(conn *websocket.Conn) {
 
             }
         } else if msg.Action=="post" {
-            err := PostComment(msg.URL, s, msg.Body)
+            post,err := PostComment(msg.URL, s, msg.Body)
             if err!=nil { fmt.Printf("posting error: %s",err.Error()) }
-            resp := WsMsg{Action:"Posted"}
+
+            updateComms := make([]byte,0,16384)
+            for _,c := range post.Comments {
+                updateComms = append(updateComms, []byte(`<div class="comment">`)... )
+                updateComms = append(updateComms, c.Html...)
+                updateComms = append(updateComms, []byte(`</div>`)... )
+            }
+            resp := WsMsg{Action:"Update",Body:string(updateComms)}
             js, err := json.Marshal(resp)
+            if err==nil { conn.WriteMessage(1, js) } else { fmt.Printf("Update marshall error:%s\n", err.Error()) }
+
+            resp = WsMsg{Action:"Posted"}
+            js, err = json.Marshal(resp)
             if err==nil { conn.WriteMessage(1, js) } else { fmt.Printf("Post marshall error:%s\n", err.Error()) }
+
         }
     }
 }

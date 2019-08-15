@@ -49,7 +49,7 @@ func CommentEditor(session *Session) []byte {
                 </form>
             </div>
             
-            <div id="comPreview" class="comment" style="display: inline-block; width:45%; margin-left:8%; margin-right:0; float;right; border:1px solid #666666">
+            <div id="comPreview" class="comment" style="display: inline-block; width:45%; margin-left:8%; margin-right:0; float;right; border:1px solid #666666"><div class="wblock">Live preview will appear here...</div>
             </div><div style="clear:both"></div>
 </div>`)
 }
@@ -67,12 +67,12 @@ type Comment struct {
     Html     []byte
 }
 
-func PostComment(ustr string, s *Session, body string) error {
+func PostComment(ustr string, s *Session, body string) (*Post,error) {
     u,err := url.Parse(ustr)
     fmt.Println(u)
-    if err!=nil { return err }
+    if err!=nil { return nil,err }
     if !u.IsAbs() || filepath.Base(u.Path)!="index.html" || !strings.HasPrefix(u.Path,"/awmblog") {
-        return errors.New("Url is absolute garbage")
+        return nil,errors.New("Url is absolute garbage")
     }
     postPath := u.Path[8:]                           // e.g. "awmblog/blah/index.html" -> "/blah/index.html"
     fmt.Printf("URL Path is %s\n",u.Path)
@@ -80,7 +80,7 @@ func PostComment(ustr string, s *Session, body string) error {
     filename := "data/" + parent + ".rst"             // e.g. ... -> "data/blah.rst"
     fmt.Printf("Checking %s\n", filename)
     outsideFI, _ := os.Stat(filename)
-    if outsideFI==nil { return errors.New("Url is garbage") }
+    if outsideFI==nil { return nil,errors.New("Url is garbage") }
 
     newComm := Comment{ Name:s.Name, Provider:s.provider, Sub:s.Sub, Email:s.Email, Body:body, When:time.Now() }
     lines  := rst.LineScannerBytes([]byte(body))
@@ -106,7 +106,7 @@ func PostComment(ustr string, s *Session, body string) error {
     post.Comments = append(post.Comments,newComm)
     post.Lock.Unlock()
     err = post.Save()
-    return err
+    return post,err
 }
 
 func (self *Post) Save() error {

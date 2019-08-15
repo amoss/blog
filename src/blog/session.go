@@ -109,6 +109,7 @@ func checkMac(mac string) ([]byte, bool) {
     split   := bytes.LastIndexByte(raw,'|')
     msg     := raw[:split]
     oldSig  := raw[split+1:]
+    fmt.Printf("Checking: %s | %v as mac\n", string(msg), oldSig)
 
     stateHmac.Reset()
     stateHmac.Write([]byte(msg))

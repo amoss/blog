@@ -38,6 +38,9 @@ function readEvent(ev)
         src.value = ""
         but.disabled = false;
         but.value    = "Add Comment";
+    } else if(msg.Action=="Update"){
+        var block = document.getElementById('thecomments');
+        block.innerHTML = msg.Body
     }
 }
 
