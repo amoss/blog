@@ -89,6 +89,7 @@ func Lookup(name string) (*Post,error) {
             post.Subtitle = headBlock.Subtitle
             post.Body     = make([]byte,0,16384)
             post.Body     = append(post.Body, renderHeading(headBlock)...)
+            post.Body     = append(post.Body, []byte(fmt.Sprintf(`<div type="wblock"><h2>%s</h2></div>`, post.Subtitle))...)
             post.Body     = append(post.Body, renderHtml(blocks)...)
             fmt.Printf("Cached %d bytes in %s body\n", len(post.Body), filename)
         } else {
