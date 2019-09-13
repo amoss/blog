@@ -25,6 +25,7 @@ import (
     "rst"
     "github.com/gorilla/websocket"
     "golang.org/x/oauth2"
+    "golang.org/x/crypto/scrypt"
 )
 
 
@@ -393,7 +394,15 @@ func authHandler(out http.ResponseWriter, req *http.Request) {
         user := req.FormValue("user")
         pass := req.FormValue("password")
         original := req.FormValue("from")
-        if user=="amoss" && pass=="CENSORED" {
+        pwHash,err := scrypt.Key([]byte(pass), []byte("noobvioussaltthatwouldbesilly"), 65536, 8, 1, 16)
+        if err!=nil {
+            http.Error(out, "Looks bad from here", http.StatusInternalServerError)
+            fmt.Printf("Error in scrypt: %s\n", err.Error())
+            return
+        }
+        fmt.Printf("Scrypt says: %x\n",pwHash)
+        localPw := []byte{0x08, 0x59, 0x72, 0xf4, 0xf2, 0x6c, 0x09, 0x06, 0xd0, 0x4d, 0xcd, 0x69, 0xb2, 0x39, 0x5b, 0x4f}
+        if user=="amoss" && bytes.Equal(pwHash,localPw) {
             loginKey := fmt.Sprintf("local|1")
             encLogin := msgMac(loginKey)
 
@@ -524,15 +533,33 @@ func logoutHandler(out http.ResponseWriter, req *http.Request) {
     http.Redirect(out, req, original, http.StatusFound)
 }
 
+type ClientSecrets struct {
+    GoogleID     string
+    GoogleSecret string
+}
+
+
 var whitelist = []string{ "/awmblog/styles.css",    "/awmblog/graymaster2.jpg", "/awmblog/Basic-Regular.ttf",
                 "/awmblog/Inconsolata-Regular.ttf", "/awmblog/SourceSansPro-Regular.otf",
                 "/awmblog/ArbutusSlab-Regular.ttf", "/awmblog/Rasa-Medium.ttf", "/awmblog/Yrsa-Medium.ttf",
                 "/awmblog/FanwoodText-Regular.ttf", "/awmblog/SpectralSC-Medium.ttf", "/awmblog/Rasa-Regular.ttf",
                 "/awmblog/login.html",              "/awmblog/comments.js" }
 func main() {
+    secrets,err := ioutil.ReadFile("secrets.json")
+    if err!=nil {
+        fmt.Printf("Can't read the client secrets file! %s\n", err.Error())
+        return
+    }
+    var secretVals ClientSecrets
+    if err=json.Unmarshal(secrets,&secretVals); err!=nil {
+        fmt.Printf("Wrong format for client secrets file! %s\n", err.Error())
+        return
+    }
+    providers["google"].ClientID     = secretVals.GoogleID
+    providers["google"].ClientSecret = secretVals.GoogleSecret
     cache = make(map[string]*Post)
     hmacKey = make([]byte,32)
-    _,err := rand.Read(hmacKey)
+    _,err = rand.Read(hmacKey)
     if err!=nil {
         fmt.Printf("Can't initialise the random hmac key! %s\n", err.Error())
         return
